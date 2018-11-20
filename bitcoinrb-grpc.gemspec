@@ -5,9 +5,9 @@ require "bitcoinrb/grpc/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "bitcoinrb-grpc"
-  spec.version       = Bitcoinrb::Grpc::VERSION
+  spec.version       = Bitcoin::Grpc::VERSION
   spec.authors       = ["Hajime Yamaguchi"]
-  spec.email         = ["h_yamaguchi@haw.co.jp"]
+  spec.email         = ["gen.yamaguchi0@gmail.com"]
 
   spec.summary       = %q{TODO: Write a short summary, because RubyGems requires one.}
   spec.description   = %q{TODO: Write a longer description or delete this line.}

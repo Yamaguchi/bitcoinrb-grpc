@@ -1,6 +1,6 @@
-require "bitcoinrb/grpc/version"
+require "bitcoin/grpc/version"
 
-module Bitcoinrb
+module Bitcoin
   module Grpc
     class Error < StandardError; end
     # Your code goes here...

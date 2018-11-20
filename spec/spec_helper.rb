@@ -1,5 +1,5 @@
 require "bundler/setup"
-require "bitcoinrb/grpc"
+require "bitcoin/grpc"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
