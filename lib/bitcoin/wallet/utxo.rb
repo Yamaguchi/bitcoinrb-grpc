@@ -23,7 +23,7 @@ module Bitcoin
         len = Bitcoin.unpack_var_int_from_io(buf)
         script_payload = buf.read(len)
         script_pubkey = Bitcoin::Script.parse_from_payload(script_payload)
-        new(txid, index, block_height, tx_index, value, script_pubkey)
+        new(txid, index, block_height, tx_index, value: value, script_pubkey: script_pubkey)
       end
 
       def to_payload

@@ -4,7 +4,7 @@ module Bitcoin
 
       KEY_PREFIX = {
         out_point: 'o',  # key: out_point(tx_hash and index)
-        public_key: 'p', # key: script_pubkey and out_point(tx_hash and index)
+        script: 's',     # key: script_pubkey and out_point(tx_hash and index)
         block: 'b',      # key: block height and tx_index(position in block)
       }
 
@@ -22,15 +22,15 @@ module Bitcoin
       def save(out_point, value, script_pubkey, block_height, tx_index)
         level_db.batch do
           utxo = Bitcoin::Wallet::Utxo.new(out_point.txid.rhex, out_point.index, block_height, tx_index, value: value, script_pubkey: script_pubkey)
-          payload = utxo.payload.bth
+          payload = utxo.to_payload.bth
 
           # out_point
           key = KEY_PREFIX[:out_point] + out_point.to_payload.bth
-          level_db.put(public_key_key, payload)
+          level_db.put(key, payload)
 
-          # public_key
+          # script_pubkey
           if script_pubkey
-            key = KEY_PREFIX[:public_key] + script_pubkey.to_payload.bth + out_point.to_payload.bth
+            key = KEY_PREFIX[:script] + script_pubkey.to_payload.bth + out_point.to_payload.bth
             level_db.put(key, payload)
           end
 
@@ -47,7 +47,7 @@ module Bitcoin
           level_db.delete(key)
 
           if utxo.script_pubkey
-            key = KEY_PREFIX[:public_key] + utxo.script_pubkey.to_payload.bth + out_point.to_payload.bth
+            key = KEY_PREFIX[:script] + utxo.script_pubkey.to_payload.bth + out_point.to_payload.bth
             level_db.delete(key)
           end
 
@@ -65,7 +65,7 @@ module Bitcoin
       end
 
       def get_balance(account)
-        list_unspent_by_public_key(public_keys: account.watch_targets).sum { |u| u.value }
+        list_unspent_by_script_pubkeys(script_pubkeys: account.watch_targets.map { |t| Bitcoin::Script.to_p2wpkh(t).to_payload.bth }).sum { |u| u.value }
       end
 
       private
@@ -77,14 +77,14 @@ module Bitcoin
       end
 
       def list_unspent_by_addresses(block_min: 0, block_max: 9999999, addresses: [])
-        public_keys = addresses.map { |a| Bitcoin::Script.parse_from_addr(a).to_payload.bth }
-        list_unspent_by_public_key(block_min: block_min, block_max: block_max, public_keys: public_keys)
+        script_pubkeys = addresses.map { |a| Bitcoin::Script.parse_from_addr(a).to_payload.bth }
+        list_unspent_by_script_pubkeys(block_min: block_min, block_max: block_max, script_pubkeys: script_pubkeys)
       end
 
-      def list_unspent_by_public_key(block_min: 0, block_max: 9999999, public_keys: [])
-        public_keys.map do |key|
-          from = KEY_PREFIX[:public_key] + key + '000000000000000000000000000000000000000000000000000000000000000000000000'
-          to = KEY_PREFIX[:public_key] + key + 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+      def list_unspent_by_script_pubkeys(block_min: 0, block_max: 9999999, script_pubkeys: [])
+        script_pubkeys.map do |key|
+          from = KEY_PREFIX[:script] + key + '000000000000000000000000000000000000000000000000000000000000000000000000'
+          to = KEY_PREFIX[:script] + key + 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
           level_db.each(from: from, to: to).map { |k, v| Bitcoin::Wallet::Utxo.parse_from_payload(v.htb) }.select { |u| u.block_height >= block_min && u.block_height <= block_max }
         end.flatten
       end
