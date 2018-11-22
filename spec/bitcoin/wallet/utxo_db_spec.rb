@@ -1,13 +1,13 @@
 RSpec.describe Bitcoin::Wallet::UtxoDB do
-  let(:db) { described_class.new('./tmp/utxo_db') }
+  let(:db) { described_class.new('./tmp/db/tx') }
 
   after do
     db.close
-    FileUtils.rm_r('tmp/utxo_db')
+    FileUtils.rm_r('tmp/db/tx')
   end
 
-  describe 'save' do
-    subject { db.save(out_point, 3, script_pubkey, 1, 2) }
+  describe 'save_utxo' do
+    subject { db.save_utxo(out_point, 3, script_pubkey, 1) }
 
     let(:out_point) { Bitcoin::OutPoint.new('000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f', 0) }
     let(:script_pubkey) { Bitcoin::Script.to_p2wpkh('0a3355ef2085b1eb937c9e7729a0edde2d1e129e') }
@@ -15,10 +15,10 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
     it { expect { subject }.to change { db.level_db.keys.count }.by(3) }
   end
 
-  describe 'delete' do
-    subject { db.delete(out_point) }
+  describe 'delete_utxo' do
+    subject { db.delete_utxo(out_point) }
 
-    before { db.save(out_point, 3, script_pubkey, 1, 2) }
+    before { db.save_utxo(out_point, 3, script_pubkey, 1) }
 
     let(:out_point) { Bitcoin::OutPoint.new('000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f', 0) }
     let(:script_pubkey) { Bitcoin::Script.to_p2wpkh('0a3355ef2085b1eb937c9e7729a0edde2d1e129e') }
@@ -28,9 +28,9 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
 
   describe 'list_unspent' do
     before do
-      db.save(out_point1, 3, script_pubkey1, 1, 2)
-      db.save(out_point2, 6, script_pubkey2, 4, 5)
-      db.save(out_point3, 9, script_pubkey3, 7, 8)
+      db.save_utxo(out_point1, 3, script_pubkey1, 1)
+      db.save_utxo(out_point2, 6, script_pubkey2, 4)
+      db.save_utxo(out_point3, 9, script_pubkey3, 7)
     end
 
     let(:out_point1) { Bitcoin::OutPoint.new('000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f', 0) }
@@ -46,14 +46,14 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
       it { expect(subject.size).to eq 3 }
     end
 
-    context 'when block_min specified' do
-      subject { db.list_unspent(block_min: 3) }
+    context 'when min specified' do
+      subject { db.list_unspent(current_block_height: 10, min: 4) }
 
       it { expect(subject.size).to eq 2 }
     end
 
-    context 'when block_max specified' do
-      subject { db.list_unspent(block_max: 3) }
+    context 'when max specified' do
+      subject { db.list_unspent(current_block_height: 10, max: 5) }
 
       it { expect(subject.size).to eq 1 }
     end
@@ -66,15 +66,13 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
   end
 
   describe 'get_balance' do
-    subject { db.get_balance(account) }
-
     let(:wallet) { Bitcoin::Wallet::Base.create(1, 'tmp/wallet_db/').tap { |w| w.create_account('hoge') } }
     let(:account) { wallet.accounts.first }
 
     before do
-      db.save(out_point1, 3, script_pubkey1, 1, 2)
-      db.save(out_point2, 6, script_pubkey2, 4, 5)
-      db.save(out_point3, 9, script_pubkey3, 7, 8)
+      db.save_utxo(out_point1, 3, script_pubkey1, 1)
+      db.save_utxo(out_point2, 6, script_pubkey2, 4)
+      db.save_utxo(out_point3, 9, script_pubkey3, 7)
     end
 
     after do
@@ -89,7 +87,23 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
     let(:script_pubkey2) { Bitcoin::Script.to_p2wpkh(account.create_receive.hash160) }
     let(:script_pubkey3) { Bitcoin::Script.to_p2wpkh('a402e0e309dfa1d9a168ceace52e2b1b8baf3da8') }
 
-    it { expect(subject).to eq 9 }
+    context 'with all balance' do
+      subject { db.get_balance(account) }
+
+      it { expect(subject).to eq 9 }
+    end
+
+    context 'when min specified' do
+      subject { db.get_balance(account, current_block_height: 10, min: 8) }
+
+      it { expect(subject).to eq 3 }
+    end
+
+    context 'when max specified' do
+      subject { db.get_balance(account, current_block_height: 10, max: 7) }
+
+      it { expect(subject).to eq 6 }
+    end
 
     xcontext 'many utxo' do
       subject { db.get_balance(account2) }
@@ -100,7 +114,7 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
       before do
         1000.times do |i|
           out_point = Bitcoin::OutPoint.new('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff', i)
-          db.save(out_point, 3, script_pubkey, 1, 2)
+          db.save_utxo(out_point, 3, script_pubkey, 1, 2)
         end
       end
 

@@ -27,5 +27,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec", "~> 3.0"
 
   spec.add_runtime_dependency 'bitcoinrb'
+  spec.add_runtime_dependency 'concurrent-ruby'
+  spec.add_runtime_dependency 'concurrent-ruby-edge'
   spec.add_runtime_dependency 'leveldb-ruby'
 end

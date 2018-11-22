@@ -1,5 +1,61 @@
 #!/usr/bin/env ruby
 
-require "bundler/setup"
-require "bitcoin/grpc"
+require 'bundler/setup'
+require 'bitcoin'
+require 'bitcoin/grpc'
 
+
+require 'thor'
+require 'daemon_spawn'
+
+class BitcoinDaemon < DaemonSpawn::Base
+  def start(args)
+    puts "Bitcoinrb daemon start : #{Time.now} #{args}"
+    conf = Bitcoin::Node::Configuration.new(network: args.first[:network])
+
+    require 'extensions/bitcoin/rpc/request_handler'
+    require 'extensions/bitcoin/wallet/base'
+
+    node = Bitcoin::Node::SPV.new(conf)
+    publisher = Bitcoin::Wallet::Publisher.spawn(:publisher)
+    watcher = Bitcoin::Wallet::Listener.new(node, publisher)
+    node.add_observer(watcher)
+    node.run
+  end
+
+  def stop(args)
+    puts "Bitcoinrb daemon stop : #{Time.now} #{args}"
+  end
+end
+
+class Bitcoinrbd < Thor
+
+  class_option :network, aliases: '-n', default: :mainnet
+
+  desc 'start', 'start bitcoinrb daemon.'
+  def start
+    network = options['network'] ? options['network'].to_sym : :mainnet
+    Bitcoin.chain_params = network
+    FileUtils.mkdir_p(Bitcoin.base_dir)
+    execute_daemon(['start', network: network])
+  end
+
+  desc 'stop', 'stop bitcoinrb daemon.'
+  def stop
+    network = options['network'] ? options['network'].to_sym : :mainnet
+    Bitcoin.chain_params = network
+    execute_daemon(['stop', network: network])
+  end
+
+  private
+
+  def execute_daemon(cmd_args)
+    BitcoinDaemon.spawn!({working_dir: Bitcoin.base_dir,
+                                     log_file: "#{Bitcoin.base_dir}/log/debug.log",
+                                     pid_file: "#{Bitcoin.base_dir}/bitcoinrbd-grpc.pid",
+                                     sync_log: true,
+                                     singleton: true}, cmd_args)
+  end
+end
+
+Bitcoinrbd.start(ARGV)
