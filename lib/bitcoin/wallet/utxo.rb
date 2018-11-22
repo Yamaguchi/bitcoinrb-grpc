@@ -15,6 +15,10 @@ module Bitcoin
         @script_pubkey = script_pubkey
       end
 
+      def out_point
+         OutPoint.new(tx_hash, index)
+      end
+
       def self.parse_from_payload(payload)
         buf = payload.is_a?(String) ? StringIO.new(payload) : payload
         tx_hash, index, block_height, value = buf.read(48).unpack('H64N2Q>')

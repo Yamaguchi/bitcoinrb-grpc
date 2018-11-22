@@ -10,18 +10,22 @@ module Bitcoin
       end
 
       def on_message(message)
-        match message, (on Array.(:subscribe, ~any) do |type|
-          if envelope.sender.is_a? Concurrent::Actor::Reference
-            receivers[type.name] ||= []
-            receivers[type.name] << envelope.sender
-          end
-        end), (on :unsubscribe do
+        case message
+        when :unsubscribe
           receivers.each { |receiver| receiver.delete(envelope.sender) }
-        end), (on Array.(:subscribe?, ~any) do |type|
-          receivers[type.name]&.include?(envelope.sender)
-        end), (on any do
+        when Array
+          if message[0] == :subscribe
+            if envelope.sender.is_a? Concurrent::Actor::Reference
+              receivers[message[1].name] ||= []
+              receivers[message[1].name] << envelope.sender
+            end
+          elsif message[0] == :subscribe?
+            receivers[message[1].name]&.include?(envelope.sender)
+          else
+          end
+        else
           receivers[message&.type&.name]&.each { |r| r << message }
-        end)
+        end
       end
     end
   end

@@ -1,6 +1,7 @@
 module Bitcoin
   module Wallet
-    class Listener < Concurrent::Actor::Context
+    class UtxoHandler < Concurrent::Actor::Context
+      include Events
       attr_reader :watchings, :spv, :utxo_db, :publisher
 
       def initialize(spv, publisher)
@@ -25,10 +26,16 @@ module Bitcoin
         tx.outputs.each_with_index do |output, index|
           next unless watch_targets.find { |target| output.script_pubkey == Bitcoin::Script.to_p2wpkh(target) }
           out_point = Bitcoin::OutPoint.new(tx.tx_hash, index)
-          utxo_db.save_utxo(out_point, output.value, output.script_pubkey, block_height)
+          utxo = utxo_db.save_utxo(out_point, output.value, output.script_pubkey, block_height)
+          publisher << EventUtxoRegistered.new(tx, utxo) if utxo
         end
 
-        tx.inputs.each { |input| utxo_db.delete_utxo(input.out_point) }
+        tx.inputs.each do |input|
+          utxo = utxo_db.delete_utxo(input.out_point)
+          publisher << EventUtxoSpent.new(tx, utxo) if utxo
+        end
+
+        publisher << WatchAssetIdAssigned.new(tx) if tx.colored?
       end
 
       def merkleblock(data)
@@ -69,25 +76,5 @@ module Bitcoin
         end
       end
     end
-
-    class WatchTxConfirmed
-      attr_reader :tx, :confirmations
-
-      def initialize(tx, confirmations)
-        @tx = tx
-        @confirmations = confirmations
-      end
-    end
-
-    class EventTxConfirmed
-      attr_reader :tx, :confirmations
-
-      def initialize(tx, confirmations)
-        @tx = tx
-        @confirmations = confirmations
-      end
-    end
   end
 end
-
-

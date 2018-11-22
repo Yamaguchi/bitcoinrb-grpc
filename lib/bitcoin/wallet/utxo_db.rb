@@ -1,13 +1,17 @@
 module Bitcoin
   module Wallet
     class UtxoDB
+      include Asset
 
       KEY_PREFIX = {
-        out_point: 'o',  # key: out_point(tx_hash and index), value: Utxo
-        script: 's',     # key: script_pubkey and out_point(tx_hash and index), value: Utxo
-        height: 'h',     # key: block_height and out_point, value: Utxo
-        tx_hash: 't',    # key: tx_hash of transaction, value: Tx
-        block: 'b',      # key: block_height and tx_index, value: Tx
+        out_point: 'o',        # key: out_point(tx_hash and index), value: Utxo
+        script: 's',           # key: script_pubkey and out_point(tx_hash and index), value: Utxo
+        height: 'h',           # key: block_height and out_point, value: Utxo
+        tx_hash: 't',          # key: tx_hash of transaction, value: Tx
+        block: 'b',            # key: block_height and tx_index, value: Tx
+        asset_out_point: 'ao', # key: asset_type and out_point, value AssetOutput
+        asset_sript: 'as',     # key: asset_type, script_pubkey and out_point, value AssetOutput
+        asset_height: 'ah',    # key: asset_type, block_height and out_point, value AssetOutput
       }
 
       attr_reader :level_db
@@ -58,6 +62,7 @@ module Bitcoin
           # block_height
           key = KEY_PREFIX[:height] + [block_height].pack('N').bth + out_point.to_payload.bth
           level_db.put(key, payload)
+          utxo
         end
       end
 
@@ -75,6 +80,7 @@ module Bitcoin
 
           key = KEY_PREFIX[:height] + [utxo.block_height].pack('N').bth + out_point.to_payload.bth
           level_db.delete(key)
+          return utxo
         end
       end
 

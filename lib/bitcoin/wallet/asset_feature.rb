@@ -1,0 +1,108 @@
+module Bitcoin
+  module Wallet
+    module AssetFeature
+      enum asset_type: {
+        open_assets: 1
+      }
+
+      def save_token(asset_type, asset_id, asset_quantity, output, block_height)
+        level_db.batch do
+          asset_output = Bitcoin::Wallet::AssetOutput.new(
+            asset_type, asset_id, asset_quantity, output.out_point.x_hash, output.out_point.index, block_height
+          )
+          payload = asset_output.to_payload.bth
+
+          # out_point
+          key = KEY_PREFIX[:asset_out_point] + [AssetFeature.asset_types[asset_type]].pack('C').bth + out_point.to_payload.bth
+          return if level_db.contains?(key)
+          level_db.put(key, payload)
+
+          # script_pubkey
+          if output.script_pubkey
+            key = KEY_PREFIX[:asset_script_pubkey] + [AssetFeature.asset_types[asset_type]].pack('C').bth + script_pubkey.to_payload.bth + out_point.to_payload.bth
+            level_db.put(key, payload)
+          end
+
+          # block_height
+          key = KEY_PREFIX[:asset_height] + [AssetFeature.asset_types[asset_type]].pack('C').bth + [block_height].pack('N').bth + out_point.to_payload.bth
+          level_db.put(key, payload)
+          utxo
+        end
+      end
+
+      def delete_token(asset_type, utxo)
+        level_db.batch do
+          key = KEY_PREFIX[:asset_out_point] + [AssetFeature.asset_types[asset_type]].pack('C').bth + utxo.out_point.to_payload.bth
+          return unless level_db.contains?(key)
+          asset = AssetOutput.parse_from_payload(level_db.get(key).htb)
+          level_db.delete(key)
+
+          if utxo.script_pubkey
+            key = KEY_PREFIX[:asset_script_pubkey] + [AssetFeature.asset_types[asset_type]].pack('C').bth + utxo.script_pubkey.to_payload.bth + utxo.out_point.to_payload.bth
+            level_db.delete(key)
+          end
+
+          key = KEY_PREFIX[:asset_height] + [AssetFeature.asset_types[asset_type]].pack('C').bth + [utxo.block_height].pack('N').bth + utxo.out_point.to_payload.bth
+          level_db.delete(key)
+          return asset
+        end
+      end
+
+      def list_unspent_assets(asset_type, asset_id, current_block_height: 9999999, min: 0, max: 9999999, addresses: nil)
+        raise NotImplementedError.new("asset_type should not be nil.") unless asset_type
+        raise ArgumentError.new('asset_id should not be nil') unless asset_id
+
+        if addresses
+          list_unspent_assets_by_addresses(asset_type, asset_id, current_block_height, min: min, max: max, addresses: addresses)
+        else
+          list_unspent_assets_by_block_height(asset_type, asset_id, current_block_height, min: min, max: max)
+        end
+      end
+
+      def get_asset_balance(asset_type, asset_id, account, current_block_height: 9999999, min: 0, max: 9999999, addresses: nil)
+        raise NotImplementedError.new("asset_type should not be nil.") unless asset_type
+        raise ArgumentError.new('asset_id should not be nil') unless asset_id
+
+        list_unspent_assets_in_account(asset_type, asset_id, account, current_block_height, min: min, max: max).sum { |u| u.asset_quantity }
+      end
+
+      private
+
+      def assets_between(from, to, asset_id)
+        level_db.each(from: from, to: to)
+          .map { |k, v| Bitcoin::Wallet::AssetOutput.parse_from_payload(v.htb) }
+          .select {|asset| asset.asset_id == asset_id }
+      end
+
+      def list_unspent_assets_by_block_height(asset_type, asset_id, current_block_height, min: 0, max: 9999999)
+        max_height = [current_block_height - min, 0].max
+        min_height = [current_block_height - max, 0].max
+
+        from = KEY_PREFIX[:asset_height] + [AssetFeature.asset_types[asset_type], min_height].pack('CN').bth + '000000000000000000000000000000000000000000000000000000000000000000000000'
+        to = KEY_PREFIX[:asset_height] + [AssetFeature.asset_types[asset_type], max_height].pack('CN').bth + 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+        assets_between(from, to, asset_id)
+      end
+
+      def list_unspent_assets_by_addresses(asset_type, asset_id, current_block_height, min: 0, max: 9999999, addresses: [])
+        script_pubkeys = addresses.map { |a| Bitcoin::Script.parse_from_addr(a).to_payload.bth }
+        list_unspent_assets_by_script_pubkeys(asset_type, asset_id, current_block_height, min: min, max: max, script_pubkeys: script_pubkeys)
+      end
+
+      def list_unspent_assets_by_script_pubkeys(asset_type, asset_id, current_block_height, min: 0, max: 9999999, script_pubkeys: [])
+        max_height = current_block_height - min
+        min_height = current_block_height - max
+        script_pubkeys.map do |key|
+          from = KEY_PREFIX[:asset_script_pubkey] + [AssetFeature.asset_types[asset_type]].pack('C').bth + key + '000000000000000000000000000000000000000000000000000000000000000000000000'
+          to = KEY_PREFIX[:asset_script_pubkey] + [AssetFeature.asset_types[asset_type]].pack('C').bth + key + 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+          assets_between(from, to, asset_id).with_height(min_height, max_height)
+        end.flatten
+      end
+
+      def list_unspent_assets_in_account(asset_type, asset_id, account, current_block_height, min: min, max: max)
+        return [] unless account
+        script_pubkeys = account.watch_targets.map { |t| Bitcoin::Script.to_p2wpkh(t).to_payload.bth }
+        list_unspent_assets_by_script_pubkeys(asset_type, asset_id, current_block_height, min: min, max: max, script_pubkeys: script_pubkeys)
+      end
+    end
+  end
+end

@@ -11,10 +11,14 @@ module Bitcoin
   end
 
   module Wallet
+    autoload :AssetFeature, 'bitcoin/wallet/asset_feature'
+    autoload :AssetHandler, 'bitcoin/wallet/asset_handler'
+    autoload :AssetOutput, 'bitcoin/wallet/asset_output'
+    autoload :Events, 'bitcoin/wallet/events'
+    autoload :Publisher, 'bitcoin/wallet/publisher'
     autoload :Utxo, 'bitcoin/wallet/utxo'
     autoload :UtxoDB, 'bitcoin/wallet/utxo_db'
-    autoload :Listener, 'bitcoin/wallet/listener'
-    autoload :Publisher, 'bitcoin/wallet/publisher'
+    autoload :UtxoListener, 'bitcoin/wallet/utxo_listener'
   end
 end
 
