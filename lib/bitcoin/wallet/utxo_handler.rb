@@ -18,6 +18,18 @@ module Bitcoin
         send(event, data)
       end
 
+      def on_message(message)
+        case message
+        when WatchTxConfirmed
+          spv.filter_add(message.tx_hash)
+          watchings << message
+        when :watchings
+          watchings
+        end
+      end
+
+      private
+
       def tx(data)
         tx = data.tx
         block_height = spv.chain.latest_block.height
@@ -63,16 +75,6 @@ module Bitcoin
             watchings.delete(item)
           else
           end
-        end
-      end
-
-      def on_message(message)
-        case message
-        when WatchTxConfirmed
-          spv.filter_add(message.tx_hash)
-          watchings << message
-        when :watchings
-          watchings
         end
       end
     end

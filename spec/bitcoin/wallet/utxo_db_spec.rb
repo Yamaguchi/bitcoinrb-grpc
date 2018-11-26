@@ -122,4 +122,38 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
       it { expect(subject).to eq 3000 }
     end
   end
+
+  describe 'AssetFeature' do
+    let(:asset_type) { Bitcoin::Wallet::AssetFeature::AssetType::OPEN_ASSETS }
+    let(:asset_id) { 'ALn3aK1fSuG27N96UGYB1kUYUpGKRhBuBC' }
+    let(:asset_quantity) { 1 }
+    let(:utxo) { Bitcoin::Wallet::Utxo.new('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff', 1, 2, value: 4, script_pubkey: script_pubkey) }
+    let(:block_height) { 1000 }
+    let(:script_pubkey) { Bitcoin::Script.to_p2wpkh('0a3355ef2085b1eb937c9e7729a0edde2d1e129e') }
+
+    describe '#save_token' do
+      subject { db.save_token(asset_type, asset_id, asset_quantity, utxo) }
+
+      it { expect { subject }.to change { db.level_db.keys.count }.by(3) }
+    end
+
+    describe '#delete_token' do
+      subject { db.delete_token(asset_type, utxo) }
+
+      before { db.save_token(asset_type, asset_id, asset_quantity, utxo) }
+
+      it { expect { subject }.to change { db.level_db.keys.count }.by(-3) }
+    end
+
+    describe '#list_unspent_assets' do
+      # list_unspent_assets(asset_type, asset_id, current_block_height: 9999999, min: 0, max: 9999999, addresses: nil)
+
+    end
+
+    describe '#get_asset_balance' do
+      # get_asset_balance(asset_type, asset_id, account, current_block_height: 9999999, min: 0, max: 9999999, addresses: nil)
+
+    end
+  end
+
 end

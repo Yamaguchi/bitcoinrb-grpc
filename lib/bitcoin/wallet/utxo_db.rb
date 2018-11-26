@@ -1,7 +1,7 @@
 module Bitcoin
   module Wallet
     class UtxoDB
-      include Asset
+      include Bitcoin::Wallet::AssetFeature
 
       KEY_PREFIX = {
         out_point: 'o',        # key: out_point(tx_hash and index), value: Utxo
@@ -9,9 +9,6 @@ module Bitcoin
         height: 'h',           # key: block_height and out_point, value: Utxo
         tx_hash: 't',          # key: tx_hash of transaction, value: Tx
         block: 'b',            # key: block_height and tx_index, value: Tx
-        asset_out_point: 'ao', # key: asset_type and out_point, value AssetOutput
-        asset_sript: 'as',     # key: asset_type, script_pubkey and out_point, value AssetOutput
-        asset_height: 'ah',    # key: asset_type, block_height and out_point, value AssetOutput
       }
 
       attr_reader :level_db

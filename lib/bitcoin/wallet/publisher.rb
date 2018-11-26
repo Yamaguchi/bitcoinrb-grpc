@@ -24,7 +24,7 @@ module Bitcoin
           else
           end
         else
-          receivers[message&.type&.name]&.each { |r| r << message }
+          receivers[message&.name]&.each { |r| r << message }
         end
       end
     end

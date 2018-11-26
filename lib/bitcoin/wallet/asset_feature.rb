@@ -1,30 +1,37 @@
 module Bitcoin
   module Wallet
     module AssetFeature
-      enum asset_type: {
-        open_assets: 1
+      module AssetType
+        OPEN_ASSETS = 1
+      end
+
+      KEY_PREFIX = {
+        asset_out_point: 'ao', # key: asset_type and out_point, value AssetOutput
+        asset_script_pubkey: 'as',     # key: asset_type, script_pubkey and out_point, value AssetOutput
+        asset_height: 'ah',    # key: asset_type, block_height and out_point, value AssetOutput
       }
 
-      def save_token(asset_type, asset_id, asset_quantity, output, block_height)
+      def save_token(asset_type, asset_id, asset_quantity, utxo)
         level_db.batch do
           asset_output = Bitcoin::Wallet::AssetOutput.new(
-            asset_type, asset_id, asset_quantity, output.out_point.x_hash, output.out_point.index, block_height
+            asset_type, asset_id, asset_quantity, utxo.tx_hash, utxo.index, utxo.block_height
           )
+          out_point = Bitcoin::OutPoint.new(utxo.tx_hash, utxo.index)
           payload = asset_output.to_payload.bth
 
           # out_point
-          key = KEY_PREFIX[:asset_out_point] + [AssetFeature.asset_types[asset_type]].pack('C').bth + out_point.to_payload.bth
+          key = KEY_PREFIX[:asset_out_point] + [asset_type].pack('C').bth + out_point.to_payload.bth
           return if level_db.contains?(key)
           level_db.put(key, payload)
 
           # script_pubkey
-          if output.script_pubkey
-            key = KEY_PREFIX[:asset_script_pubkey] + [AssetFeature.asset_types[asset_type]].pack('C').bth + script_pubkey.to_payload.bth + out_point.to_payload.bth
+          if utxo.script_pubkey
+            key = KEY_PREFIX[:asset_script_pubkey] + [asset_type].pack('C').bth + utxo.script_pubkey.to_payload.bth + out_point.to_payload.bth
             level_db.put(key, payload)
           end
 
           # block_height
-          key = KEY_PREFIX[:asset_height] + [AssetFeature.asset_types[asset_type]].pack('C').bth + [block_height].pack('N').bth + out_point.to_payload.bth
+          key = KEY_PREFIX[:asset_height] + [asset_type].pack('C').bth + [utxo.block_height].pack('N').bth + out_point.to_payload.bth
           level_db.put(key, payload)
           utxo
         end
@@ -32,17 +39,17 @@ module Bitcoin
 
       def delete_token(asset_type, utxo)
         level_db.batch do
-          key = KEY_PREFIX[:asset_out_point] + [AssetFeature.asset_types[asset_type]].pack('C').bth + utxo.out_point.to_payload.bth
+          key = KEY_PREFIX[:asset_out_point] + [asset_type].pack('C').bth + utxo.out_point.to_payload.bth
           return unless level_db.contains?(key)
           asset = AssetOutput.parse_from_payload(level_db.get(key).htb)
           level_db.delete(key)
 
           if utxo.script_pubkey
-            key = KEY_PREFIX[:asset_script_pubkey] + [AssetFeature.asset_types[asset_type]].pack('C').bth + utxo.script_pubkey.to_payload.bth + utxo.out_point.to_payload.bth
+            key = KEY_PREFIX[:asset_script_pubkey] + [asset_type].pack('C').bth + utxo.script_pubkey.to_payload.bth + utxo.out_point.to_payload.bth
             level_db.delete(key)
           end
 
-          key = KEY_PREFIX[:asset_height] + [AssetFeature.asset_types[asset_type]].pack('C').bth + [utxo.block_height].pack('N').bth + utxo.out_point.to_payload.bth
+          key = KEY_PREFIX[:asset_height] + [asset_type].pack('C').bth + [utxo.block_height].pack('N').bth + utxo.out_point.to_payload.bth
           level_db.delete(key)
           return asset
         end
@@ -78,8 +85,8 @@ module Bitcoin
         max_height = [current_block_height - min, 0].max
         min_height = [current_block_height - max, 0].max
 
-        from = KEY_PREFIX[:asset_height] + [AssetFeature.asset_types[asset_type], min_height].pack('CN').bth + '000000000000000000000000000000000000000000000000000000000000000000000000'
-        to = KEY_PREFIX[:asset_height] + [AssetFeature.asset_types[asset_type], max_height].pack('CN').bth + 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+        from = KEY_PREFIX[:asset_height] + [asset_type, min_height].pack('CN').bth + '000000000000000000000000000000000000000000000000000000000000000000000000'
+        to = KEY_PREFIX[:asset_height] + [asset_type, max_height].pack('CN').bth + 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
         assets_between(from, to, asset_id)
       end
 
@@ -92,8 +99,8 @@ module Bitcoin
         max_height = current_block_height - min
         min_height = current_block_height - max
         script_pubkeys.map do |key|
-          from = KEY_PREFIX[:asset_script_pubkey] + [AssetFeature.asset_types[asset_type]].pack('C').bth + key + '000000000000000000000000000000000000000000000000000000000000000000000000'
-          to = KEY_PREFIX[:asset_script_pubkey] + [AssetFeature.asset_types[asset_type]].pack('C').bth + key + 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+          from = KEY_PREFIX[:asset_script_pubkey] + [asset_type].pack('C').bth + key + '000000000000000000000000000000000000000000000000000000000000000000000000'
+          to = KEY_PREFIX[:asset_script_pubkey] + [asset_type].pack('C').bth + key + 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
           assets_between(from, to, asset_id).with_height(min_height, max_height)
         end.flatten
       end

@@ -19,7 +19,7 @@ module Bitcoin
       def on_message(message)
         case message
         when EventUtxoSpent
-          utxo_db.delete_token(:open_assets, message.utxo) if message.tx.open_assets?
+          utxo_db.delete_token(AssetFeature::AssetType::OPEN_ASSETS, message.utxo) if message.tx.open_assets?
         when WatchAssetIdAssigned
           case
           when message.tx.open_assets?
@@ -29,7 +29,7 @@ module Bitcoin
                 asset_id = output['asset_id']
                 asset_quantity = output['asset_quantity']
                 next unless asset_id
-                utxo_db.save_token(:open_assets, asset_id, asset_quantity, message.tx.outputs[output[:vout]])
+                utxo_db.save_token(AssetFeature::AssetType::OPEN_ASSETS, asset_id, asset_quantity, message.utxo)
                 publisher << EventTokenRegistered.new(:open_assets, asset_id, asset_quantity)
               end
             else
@@ -43,6 +43,8 @@ module Bitcoin
           end
         end
       end
+
+      private
 
       def outputs_with_open_asset_id(txid)
         client = JSONClient.new
