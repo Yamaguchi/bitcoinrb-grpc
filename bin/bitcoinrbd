@@ -15,6 +15,7 @@ class BitcoinDaemon < DaemonSpawn::Base
 
     require 'extensions/bitcoin/rpc/request_handler'
     require 'extensions/bitcoin/wallet/base'
+    require 'extensions/bitcoin/tx'
 
     node = Bitcoin::Node::SPV.new(conf)
     publisher = Bitcoin::Wallet::Publisher.spawn(:publisher)
