@@ -30,7 +30,7 @@ module Bitcoin
                 asset_quantity = output['asset_quantity']
                 next unless asset_id
                 utxo_db.save_token(AssetFeature::AssetType::OPEN_ASSETS, asset_id, asset_quantity, message.utxo)
-                publisher << EventTokenRegistered.new(:open_assets, asset_id, asset_quantity)
+                publisher << EventTokenRegistered.new(AssetFeature::AssetType::OPEN_ASSETS, asset_id, asset_quantity)
               end
             else
               task = Concurrent::TimerTask.new(execution_interval: 60) do

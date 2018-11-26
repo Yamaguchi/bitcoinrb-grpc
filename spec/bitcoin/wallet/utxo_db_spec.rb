@@ -1,5 +1,5 @@
 RSpec.describe Bitcoin::Wallet::UtxoDB do
-  let(:db) { described_class.new('./tmp/db/tx') }
+  let(:db) { described_class.new('tmp/db/tx') }
 
   after do
     db.close
@@ -77,7 +77,7 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
 
     after do
       wallet.close
-      FileUtils.rm_r('tmp/wallet_db')
+      FileUtils.rm_r('tmp/wallet_db/')
     end
 
     let(:out_point1) { Bitcoin::OutPoint.new('000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f', 0) }
@@ -155,5 +155,4 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
 
     end
   end
-
 end
