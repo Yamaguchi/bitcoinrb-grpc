@@ -18,7 +18,7 @@ module Bitcoin
     autoload :Publisher, 'bitcoin/wallet/publisher'
     autoload :Utxo, 'bitcoin/wallet/utxo'
     autoload :UtxoDB, 'bitcoin/wallet/utxo_db'
-    autoload :UtxoListener, 'bitcoin/wallet/utxo_handler'
+    autoload :UtxoHandler, 'bitcoin/wallet/utxo_handler'
   end
 end
 

@@ -18,7 +18,7 @@ class BitcoinDaemon < DaemonSpawn::Base
 
     node = Bitcoin::Node::SPV.new(conf)
     publisher = Bitcoin::Wallet::Publisher.spawn(:publisher)
-    watcher = Bitcoin::Wallet::Listener.new(node, publisher)
+    watcher = Bitcoin::Wallet::UtxoHandler.new(node, publisher)
     node.add_observer(watcher)
     node.run
   end
