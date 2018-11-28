@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package bitcoin.grpc;
+
+
+service Blockchain {
+  rpc WatchTxConfirmed(WatchTxConfirmedRequest) returns (stream WatchTxConfirmedResponse);
+  rpc WatchUtxo(WatchUtxoRequest) returns (stream WatchUtxoResponse);
+  rpc WatchToken(WatchTokenRequest) returns (stream WatchTokenResponse);
+}
+
+message WatchTxConfirmedRequest {
+  string tx_hash = 1;
+  string tx_payload = 2;
+  uint32 confirmations = 3;
+}
+
+message WatchTxConfirmedResponse {
+  oneof event {
+    EventTxConfirmed confirmed = 1;
+  }
+}
+
+message WatchUtxoRequest {
+}
+
+message WatchUtxoResponse {
+  oneof event {
+    EventUtxoRegistered registered = 1;
+    EventUtxoSpent spent = 2;
+  }
+}
+
+message WatchTokenRequest {
+  bytes asset_type = 1;
+}
+
+message WatchTokenResponse {
+  oneof event {
+    EventTokenIssued issued = 1;
+    EventTokenTransfered transfered = 2;
+    EventTokenBurned burned = 3;
+  }
+}
+
+message EventTxConfirmed {
+  string tx_hash = 1;
+  string tx_payload = 2;
+  uint32 confirmations = 3;
+}
+
+message EventUtxoRegistered {
+  string tx_hash = 1;
+  string tx_payload = 2;
+  Utxo utxo = 3;
+}
+
+message EventUtxoSpent {
+  string tx_hash = 1;
+  string tx_payload = 2;
+  Utxo utxo = 3;
+}
+
+message EventTokenIssued {
+  AssetOutput asset = 1;
+}
+
+message EventTokenTransfered {
+  AssetOutput asset = 2;
+}
+
+message EventTokenBurned {
+  AssetOutput asset = 3;
+}
+
+message Utxo {
+  string tx_hash = 1;
+  uint32 index = 2;
+  uint32 block_height = 3;
+  uint64 value = 4;
+  string script_pubkey = 5;
+}
+
+message AssetOutput {
+  bytes asset_type = 1;
+  string asset_id = 2;
+  uint64 asset_quantity = 3;
+  string tx_hash = 4;
+  uint32 index = 5;
+  uint32 block_height = 6;
+}
