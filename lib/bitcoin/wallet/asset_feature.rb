@@ -105,7 +105,7 @@ module Bitcoin
         end.flatten
       end
 
-      def list_unspent_assets_in_account(asset_type, asset_id, account, current_block_height, min: min, max: max)
+      def list_unspent_assets_in_account(asset_type, asset_id, account, current_block_height, min: 0 , max: 9999999)
         return [] unless account
         script_pubkeys = account.watch_targets.map { |t| Bitcoin::Script.to_p2wpkh(t).to_payload.bth }
         list_unspent_assets_by_script_pubkeys(asset_type, asset_id, current_block_height, min: min, max: max, script_pubkeys: script_pubkeys)
