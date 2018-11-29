@@ -32,6 +32,10 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
       optional :burned, :message, 3, "bitcoin.grpc.EventTokenBurned"
     end
   end
+  add_message "bitcoin.grpc.WatchAssetIdAssignedRequest" do
+    optional :tx_hash, :string, 1
+    optional :tx_payload, :string, 2
+  end
   add_message "bitcoin.grpc.EventTxConfirmed" do
     optional :tx_hash, :string, 1
     optional :tx_payload, :string, 2
@@ -81,6 +85,7 @@ module Bitcoin
     WatchUtxoResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.WatchUtxoResponse").msgclass
     WatchTokenRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.WatchTokenRequest").msgclass
     WatchTokenResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.WatchTokenResponse").msgclass
+    WatchAssetIdAssignedRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.WatchAssetIdAssignedRequest").msgclass
     EventTxConfirmed = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventTxConfirmed").msgclass
     EventUtxoRegistered = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventUtxoRegistered").msgclass
     EventUtxoSpent = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventUtxoSpent").msgclass

@@ -43,6 +43,11 @@ message WatchTokenResponse {
   }
 }
 
+message WatchAssetIdAssignedRequest {
+  string tx_hash = 1;
+  string tx_payload = 2;
+}
+
 message EventTxConfirmed {
   string tx_hash = 1;
   string tx_payload = 2;
