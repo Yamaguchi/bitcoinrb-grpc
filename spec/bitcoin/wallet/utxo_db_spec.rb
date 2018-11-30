@@ -6,6 +6,25 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
     FileUtils.rm_r('tmp/db/tx')
   end
 
+  describe 'get_tx_position' do
+    subject { db.get_tx_position(tx.tx_hash) }
+
+    before { db.save_tx(tx, 100, 2) }
+
+    let(:tx_payload) do
+      '0200000001a4c651f8a8a90e54988dad4a1be2e9e0aa35abf407e5c2d301b072' \
+      '949dd720fd0000000049483045022100ac5545607a4b98950db8038256c48634' \
+      'd85058c34b59caa55fca7f5a1f563ddf02206735fe476f94c8de29aa75b4b5f0' \
+      'd06dc3e7ae94a0c8532fb139a8f24a7a3ecd01feffffff0200e1f50500000000' \
+      '16001445fcf49e1a60e8ea9ef774a0bc0839aaecf15fdd2a2d5a030000000016' \
+      '00143c5870422a2e0cc73f634978712cf896a87884ed3a130000'
+    end
+    let(:tx) { Bitcoin::Tx.parse_from_payload(tx_payload.htb) }
+    let(:block_height) { 100 }
+
+    it { expect(subject).to eq [ 100, 2 ] }
+  end
+
   describe 'save_utxo' do
     subject { db.save_utxo(out_point, 3, script_pubkey, 1) }
 

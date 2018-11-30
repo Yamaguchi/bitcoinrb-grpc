@@ -7,7 +7,7 @@ module Bitcoin
         out_point: 'o',        # key: out_point(tx_hash and index), value: Utxo
         script: 's',           # key: script_pubkey and out_point(tx_hash and index), value: Utxo
         height: 'h',           # key: block_height and out_point, value: Utxo
-        tx_hash: 't',          # key: tx_hash of transaction, value: Tx
+        tx_hash: 't',          # key: tx_hash of transaction, value: [block_height, tx_index]
         block: 'b',            # key: block_height and tx_index, value: Tx
       }
 
@@ -37,7 +37,8 @@ module Bitcoin
       # @return [block_height, tx_index]
       def get_tx_position(tx_hash)
         key = KEY_PREFIX[:tx_hash] + tx_hash
-        level_db.get(key).unpack('N2')
+        return [nil, nil] unless level_db.contains?(key)
+        level_db.get(key).htb.unpack('N2')
       end
 
       def save_utxo(out_point, value, script_pubkey, block_height)

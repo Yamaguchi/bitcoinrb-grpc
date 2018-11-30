@@ -6,11 +6,15 @@ require 'concurrent-edge'
 require 'leveldb'
 
 module Bitcoin
+
+
   module Grpc
     class Error < StandardError; end
-    autoload :Blockchain, 'bitcoin/grpc/grpc_services_pb'
+
+    require 'bitcoin/grpc/grpc_pb'
+    require 'bitcoin/grpc/grpc_services_pb'
+
     autoload :Server, 'bitcoin/grpc/server'
-    autoload :Stub, 'bitcoin/grpc/grpc_services_pb'
   end
 
   module Wallet
