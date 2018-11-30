@@ -1,7 +1,7 @@
 RSpec.describe Bitcoin::Wallet::Publisher do
   class Receiver < Concurrent::Actor::Context
     def initialize(broadcast)
-      broadcast << [:subscribe, Bitcoin::Wallet::Events::EventTxConfirmed]
+      broadcast << [:subscribe, Bitcoin::Grpc::EventTxConfirmed]
     end
 
     def on_message(message)
@@ -10,7 +10,7 @@ RSpec.describe Bitcoin::Wallet::Publisher do
 
   let(:receiver) { Receiver.spawn(:receiver, publisher) }
   let(:publisher) { described_class.spawn(:publisher) }
-  let(:message) { Bitcoin::Wallet::Events::EventTxConfirmed.new(tx, 1) }
+  let(:message) { Bitcoin::Grpc::EventTxConfirmed.new(tx_hash: tx.tx_hash, tx_payload: tx.to_payload.bth, confirmations: 1) }
   let(:tx) { Bitcoin::Tx.new }
 
   describe 'on_message' do

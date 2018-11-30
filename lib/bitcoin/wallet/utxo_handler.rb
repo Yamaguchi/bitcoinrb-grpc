@@ -1,7 +1,6 @@
 module Bitcoin
   module Wallet
     class UtxoHandler < Concurrent::Actor::Context
-      include Events
       attr_reader :watchings, :spv, :utxo_db, :publisher
 
       def initialize(spv, publisher)
@@ -14,13 +13,12 @@ module Bitcoin
       end
 
       def update(event, data)
-        puts "udpate:#{event}"
         send(event, data)
       end
 
       def on_message(message)
         case message
-        when WatchTxConfirmed
+        when Bitcoin::Grpc::WatchTxConfirmedRequest
           spv.filter_add(message.tx_hash)
           watchings << message
         when :watchings
@@ -39,15 +37,15 @@ module Bitcoin
           next unless watch_targets.find { |target| output.script_pubkey == Bitcoin::Script.to_p2wpkh(target) }
           out_point = Bitcoin::OutPoint.new(tx.tx_hash, index)
           utxo = utxo_db.save_utxo(out_point, output.value, output.script_pubkey, block_height)
-          publisher << EventUtxoRegistered.new(tx, utxo) if utxo
+          publisher << Bitcoin::Grpc::EventUtxoRegistered.new(tx_hash: tx.tx_hash, tx_payload: tx.to_payload.bth, utxo: utxo) if utxo
         end
 
         tx.inputs.each do |input|
           utxo = utxo_db.delete_utxo(input.out_point)
-          publisher << EventUtxoSpent.new(tx, utxo) if utxo
+          publisher << Bitcoin::Grpc::EventUtxoSpent.new(tx_hash: tx.tx_hash, tx_payload: tx.to_payload.bth, utxo: utxo) if utxo
         end
 
-        publisher << WatchAssetIdAssigned.new(tx) if tx.colored?
+        publisher << Bitcoin::Grpc::WatchAssetIdAssignedRequest.new(tx_hash: tx.tx_hash, tx_payload: tx.to_payload.bth) if tx.colored?
       end
 
       def merkleblock(data)
@@ -56,12 +54,12 @@ module Bitcoin
         tx_blockhash = data.header.block_hash
 
         watchings
-          .select { |item| item.is_a? WatchTxConfirmed }
-          .select { |item| data.hashes.include?(item.tx.tx_hash) }
+          .select { |item| item.is_a? Bitcoin::Grpc::WatchTxConfirmedRequest }
+          .select { |item| data.hashes.include?(item.tx_hash) }
           .each do |item|
-            tx_index = tree.find_node(item.tx.tx_hash).index
+            tx_index = tree.find_node(item.tx_hash).index
             next unless tx_index
-            utxo_db.save_tx(item.tx, block_height, tx_index)
+            utxo_db.save_tx(Bitcoin::Tx.parse_from_payload(item.tx_payload.htb), block_height, tx_index)
           end
       end
 
@@ -69,9 +67,10 @@ module Bitcoin
         block_height = data[:height]
         watchings.select do |item|
           case item
-          when WatchTxConfirmed
-            height, tx_index = utxo_db.get_tx_position(item.tx.tx_hash)
-            publisher << EventTxConfirmed.new(item.tx, item.confirmations) if block_height >= height + item.confirmations
+          when Bitcoin::Grpc::WatchTxConfirmedRequest
+            height, tx_index = utxo_db.get_tx_position(item.tx_hash)
+            next unless (height || tx_index)
+            publisher << Bitcoin::Grpc::EventTxConfirmed.new(tx_hash: item.tx_hash, tx_payload: item.tx_payload, confirmations: item.confirmations) if block_height >= height + item.confirmations
             watchings.delete(item)
           else
           end
