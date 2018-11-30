@@ -18,9 +18,7 @@ class BitcoinDaemon < DaemonSpawn::Base
     require 'extensions/bitcoin/tx'
 
     node = Bitcoin::Node::SPV.new(conf)
-    publisher = Bitcoin::Wallet::Publisher.spawn(:publisher)
-    watcher = Bitcoin::Wallet::UtxoHandler.new(node, publisher)
-    node.add_observer(watcher)
+    Thread.new { Bitcoin::Grpc::Server.run(node) }
     node.run
   end
 
