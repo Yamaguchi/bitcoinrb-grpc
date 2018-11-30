@@ -13,11 +13,16 @@ module Bitcoin
 
       def save_token(asset_type, asset_id, asset_quantity, utxo)
         level_db.batch do
-          asset_output = Bitcoin::Wallet::AssetOutput.new(
-            asset_type, asset_id, asset_quantity, utxo.tx_hash, utxo.index, utxo.block_height
+          asset_output = Bitcoin::Grpc::AssetOutput.new(
+            asset_type: [asset_type].pack('C'),
+            asset_id: asset_id,
+            asset_quantity: asset_quantity,
+            tx_hash: utxo.tx_hash,
+            index: utxo.index,
+            block_height: utxo.block_height
           )
           out_point = Bitcoin::OutPoint.new(utxo.tx_hash, utxo.index)
-          payload = asset_output.to_payload.bth
+          payload = asset_output.to_proto.bth
 
           # out_point
           key = KEY_PREFIX[:asset_out_point] + [asset_type].pack('C').bth + out_point.to_payload.bth
@@ -26,7 +31,7 @@ module Bitcoin
 
           # script_pubkey
           if utxo.script_pubkey
-            key = KEY_PREFIX[:asset_script_pubkey] + [asset_type].pack('C').bth + utxo.script_pubkey.to_payload.bth + out_point.to_payload.bth
+            key = KEY_PREFIX[:asset_script_pubkey] + [asset_type].pack('C').bth + utxo.script_pubkey + out_point.to_payload.bth
             level_db.put(key, payload)
           end
 
@@ -39,17 +44,20 @@ module Bitcoin
 
       def delete_token(asset_type, utxo)
         level_db.batch do
-          key = KEY_PREFIX[:asset_out_point] + [asset_type].pack('C').bth + utxo.out_point.to_payload.bth
+          out_point = Bitcoin::OutPoint.new(utxo.tx_hash, utxo.index)
+
+          key = KEY_PREFIX[:asset_out_point] + [asset_type].pack('C').bth + out_point.to_payload.bth
           return unless level_db.contains?(key)
-          asset = AssetOutput.parse_from_payload(level_db.get(key).htb)
+          asset = Bitcoin::Grpc::AssetOutput.decode(level_db.get(key).htb)
           level_db.delete(key)
 
+
           if utxo.script_pubkey
-            key = KEY_PREFIX[:asset_script_pubkey] + [asset_type].pack('C').bth + utxo.script_pubkey.to_payload.bth + utxo.out_point.to_payload.bth
+            key = KEY_PREFIX[:asset_script_pubkey] + [asset_type].pack('C').bth + utxo.script_pubkey + out_point.to_payload.bth
             level_db.delete(key)
           end
 
-          key = KEY_PREFIX[:asset_height] + [asset_type].pack('C').bth + [utxo.block_height].pack('N').bth + utxo.out_point.to_payload.bth
+          key = KEY_PREFIX[:asset_height] + [asset_type].pack('C').bth + [utxo.block_height].pack('N').bth + out_point.to_payload.bth
           level_db.delete(key)
           return asset
         end
@@ -77,7 +85,7 @@ module Bitcoin
 
       def assets_between(from, to, asset_id)
         level_db.each(from: from, to: to)
-          .map { |k, v| Bitcoin::Wallet::AssetOutput.parse_from_payload(v.htb) }
+          .map { |k, v| Bitcoin::Grpc::AssetOutput.decode(v.htb) }
           .select {|asset| asset.asset_id == asset_id }
       end
 

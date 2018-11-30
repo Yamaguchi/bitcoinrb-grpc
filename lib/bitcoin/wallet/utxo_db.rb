@@ -43,8 +43,8 @@ module Bitcoin
 
       def save_utxo(out_point, value, script_pubkey, block_height)
         level_db.batch do
-          utxo = Bitcoin::Wallet::Utxo.new(out_point.txid.rhex, out_point.index, block_height, value: value, script_pubkey: script_pubkey)
-          payload = utxo.to_payload.bth
+          utxo = Bitcoin::Grpc::Utxo.new(tx_hash: out_point.txid.rhex, index: out_point.index, block_height: block_height, value: value, script_pubkey: script_pubkey)
+          payload = utxo.to_proto.bth
 
           # out_point
           key = KEY_PREFIX[:out_point] + out_point.to_payload.bth
@@ -53,7 +53,7 @@ module Bitcoin
 
           # script_pubkey
           if script_pubkey
-            key = KEY_PREFIX[:script] + script_pubkey.to_payload.bth + out_point.to_payload.bth
+            key = KEY_PREFIX[:script] + script_pubkey + out_point.to_payload.bth
             level_db.put(key, payload)
           end
 
@@ -68,11 +68,11 @@ module Bitcoin
         level_db.batch do
           key = KEY_PREFIX[:out_point] + out_point.to_payload.bth
           return unless level_db.contains?(key)
-          utxo = Utxo.parse_from_payload(level_db.get(key).htb)
+          utxo = Bitcoin::Grpc::Utxo.decode(level_db.get(key).htb)
           level_db.delete(key)
 
           if utxo.script_pubkey
-            key = KEY_PREFIX[:script] + utxo.script_pubkey.to_payload.bth + out_point.to_payload.bth
+            key = KEY_PREFIX[:script] + utxo.script_pubkey + out_point.to_payload.bth
             level_db.delete(key)
           end
 
@@ -97,7 +97,7 @@ module Bitcoin
       private
 
       def utxos_between(from, to)
-        level_db.each(from: from, to: to).map { |k, v| Bitcoin::Wallet::Utxo.parse_from_payload(v.htb) }
+        level_db.each(from: from, to: to).map { |k, v| Bitcoin::Grpc::Utxo.decode(v.htb) }
       end
 
       class ::Array
