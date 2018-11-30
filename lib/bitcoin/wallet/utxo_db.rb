@@ -60,7 +60,7 @@ module Bitcoin
           # block_height
           key = KEY_PREFIX[:height] + [block_height].pack('N').bth + out_point.to_payload.bth
           level_db.put(key, payload)
-          utxo
+          return utxo
         end
       end
 

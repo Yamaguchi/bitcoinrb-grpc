@@ -32,6 +32,7 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
     let(:script_pubkey) { Bitcoin::Script.to_p2wpkh('0a3355ef2085b1eb937c9e7729a0edde2d1e129e') }
 
     it { expect { subject }.to change { db.level_db.keys.count }.by(3) }
+    it { expect(subject).to be_kind_of Bitcoin::Wallet::Utxo }
   end
 
   describe 'delete_utxo' do
