@@ -32,9 +32,9 @@ module Bitcoin
                 next unless asset_id
                 utxo_db.save_token(AssetFeature::AssetType::OPEN_ASSETS, asset_id, asset_quantity, message.utxo)
                 if oa_output_type == 'issuance'
-                  publisher << Bitcoin::Grpc::EventTokenIssued.new(asset_type: ssetFeature::AssetType::OPEN_ASSETS, asset_id: asset_id, asset_quantity: asset_quantity)
+                  publisher << Bitcoin::Grpc::EventTokenIssued.new(asset_type: AssetFeature::AssetType::OPEN_ASSETS, asset_id: asset_id, asset_quantity: asset_quantity)
                 else
-                  publisher << Bitcoin::Grpc::EventTokenTransfered.new(asset_type: ssetFeature::AssetType::OPEN_ASSETS, asset_id: asset_id, asset_quantity: asset_quantity)
+                  publisher << Bitcoin::Grpc::EventTokenTransfered.new(asset_type: AssetFeature::AssetType::OPEN_ASSETS, asset_id: asset_id, asset_quantity: asset_quantity)
                 end
               end
             else
