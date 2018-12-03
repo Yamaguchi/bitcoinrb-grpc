@@ -36,7 +36,7 @@ module Bitcoin
         tx.outputs.each_with_index do |output, index|
           next unless watch_targets.find { |target| output.script_pubkey == Bitcoin::Script.to_p2wpkh(target) }
           out_point = Bitcoin::OutPoint.new(tx.tx_hash, index)
-          utxo = utxo_db.save_utxo(out_point, output.value, output.script_pubkey, block_height)
+          utxo = utxo_db.save_utxo(out_point, output.value, output.script_pubkey.to_payload.bth, block_height)
           publisher << Bitcoin::Grpc::EventUtxoRegistered.new(tx_hash: tx.tx_hash, tx_payload: tx.to_payload.bth, utxo: utxo) if utxo
         end
 
