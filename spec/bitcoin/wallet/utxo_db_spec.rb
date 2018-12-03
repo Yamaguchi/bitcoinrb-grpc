@@ -1,9 +1,10 @@
 RSpec.describe Bitcoin::Wallet::UtxoDB do
-  let(:db) { described_class.new('tmp/db/tx') }
-
+  let(:wallet) { Bitcoin::Wallet::Base.create(1, 'tmp/wallet_db/').tap { |w| w.create_account('hoge') } }
+  let(:db) { wallet.utxo_db }
   after do
     db.close
-    FileUtils.rm_r('tmp/db/tx')
+    wallet.close
+    FileUtils.rm_r('tmp/wallet_db/')
   end
 
   describe 'get_tx_position' do
@@ -86,18 +87,12 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
   end
 
   describe 'get_balance' do
-    let(:wallet) { Bitcoin::Wallet::Base.create(1, 'tmp/wallet_db/').tap { |w| w.create_account('hoge') } }
     let(:account) { wallet.accounts.first }
 
     before do
       db.save_utxo(out_point1, 3, script_pubkey1, 1)
       db.save_utxo(out_point2, 6, script_pubkey2, 4)
       db.save_utxo(out_point3, 9, script_pubkey3, 7)
-    end
-
-    after do
-      wallet.close
-      FileUtils.rm_r('tmp/wallet_db/')
     end
 
     let(:out_point1) { Bitcoin::OutPoint.new('000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f', 0) }

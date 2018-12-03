@@ -5,6 +5,10 @@ require 'concurrent'
 require 'concurrent-edge'
 require 'leveldb'
 
+require 'extensions/bitcoin/rpc/request_handler'
+require 'extensions/bitcoin/wallet/base'
+require 'extensions/bitcoin/tx'
+
 module Bitcoin
 
 
@@ -14,6 +18,7 @@ module Bitcoin
     require 'bitcoin/grpc/grpc_pb'
     require 'bitcoin/grpc/grpc_services_pb'
 
+    autoload :OapService, 'bitcoin/grpc/oap_service'
     autoload :Server, 'bitcoin/grpc/server'
   end
 

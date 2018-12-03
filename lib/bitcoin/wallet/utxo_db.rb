@@ -13,7 +13,7 @@ module Bitcoin
 
       attr_reader :level_db, :logger
 
-      def initialize(path = "#{Bitcoin.base_dir}/db/tx")
+      def initialize(path = "#{Bitcoin.base_dir}/db/utxo")
         FileUtils.mkdir_p(path)
         @level_db = ::LevelDB::DB.new(path)
         @logger = Bitcoin::Logger.create(:debug)

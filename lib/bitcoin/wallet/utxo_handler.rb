@@ -45,7 +45,7 @@ module Bitcoin
           publisher << Bitcoin::Grpc::EventUtxoSpent.new(tx_hash: tx.tx_hash, tx_payload: tx.to_payload.bth, utxo: utxo) if utxo
         end
 
-        publisher << Bitcoin::Grpc::WatchAssetIdAssignedRequest.new(tx_hash: tx.tx_hash, tx_payload: tx.to_payload.bth) if tx.colored?
+        publisher << Bitcoin::Grpc::WatchAssetIdAssignedRequest.new(tx_hash: tx.tx_hash, tx_payload: tx.to_payload.bth, utxo: utxo) if tx.colored?
       end
 
       def merkleblock(data)

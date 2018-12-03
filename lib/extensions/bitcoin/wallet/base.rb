@@ -19,7 +19,7 @@ module Bitcoin
         @path = "#{path_prefix}wallet#{wallet_id}/"
         @db = Bitcoin::Wallet::DB.new(@path)
         @wallet_id = wallet_id
-        @utxo_db = Bitcoin::Wallet::UtxoDB.new
+        @utxo_db = Bitcoin::Wallet::UtxoDB.new("#{path_prefix}utxo#{wallet_id}/")
       end
     end
   end

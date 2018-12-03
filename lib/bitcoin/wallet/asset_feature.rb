@@ -38,7 +38,7 @@ module Bitcoin
           # block_height
           key = KEY_PREFIX[:asset_height] + [asset_type].pack('C').bth + [utxo.block_height].pack('N').bth + out_point.to_payload.bth
           level_db.put(key, payload)
-          utxo
+          return asset_output
         end
       end
 
@@ -48,7 +48,7 @@ module Bitcoin
 
           key = KEY_PREFIX[:asset_out_point] + [asset_type].pack('C').bth + out_point.to_payload.bth
           return unless level_db.contains?(key)
-          asset = Bitcoin::Grpc::AssetOutput.decode(level_db.get(key).htb)
+          asset_output = Bitcoin::Grpc::AssetOutput.decode(level_db.get(key).htb)
           level_db.delete(key)
 
 
@@ -59,7 +59,7 @@ module Bitcoin
 
           key = KEY_PREFIX[:asset_height] + [asset_type].pack('C').bth + [utxo.block_height].pack('N').bth + out_point.to_payload.bth
           level_db.delete(key)
-          return asset
+          return asset_output
         end
       end
 
