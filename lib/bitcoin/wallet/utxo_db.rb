@@ -11,11 +11,12 @@ module Bitcoin
         block: 'b',            # key: block_height and tx_index, value: Tx
       }
 
-      attr_reader :level_db
+      attr_reader :level_db, :logger
 
       def initialize(path = "#{Bitcoin.base_dir}/db/tx")
         FileUtils.mkdir_p(path)
         @level_db = ::LevelDB::DB.new(path)
+        @logger = Bitcoin::Logger.create(:debug)
       end
 
       def close
@@ -23,6 +24,7 @@ module Bitcoin
       end
 
       def save_tx(tx, block_height, tx_index)
+        logger.info("UtxoDB#save_tx:#{[tx, block_height, tx_index]}")
         level_db.batch do
           # tx_hash -> [block_height, tx_index]
           key = KEY_PREFIX[:tx_hash] + tx.tx_hash
@@ -42,6 +44,7 @@ module Bitcoin
       end
 
       def save_utxo(out_point, value, script_pubkey, block_height)
+        logger.info("UtxoDB#save_utxo:#{[out_point, value, script_pubkey, block_height]}")
         level_db.batch do
           utxo = Bitcoin::Grpc::Utxo.new(tx_hash: out_point.txid.rhex, index: out_point.index, block_height: block_height, value: value, script_pubkey: script_pubkey)
           payload = utxo.to_proto.bth
