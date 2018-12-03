@@ -23,7 +23,7 @@ module Bitcoin
         watcher << request
         channel = Concurrent::Channel.new
         Receiver.spawn(:receiver, channel, publisher, [Bitcoin::Grpc::EventTxConfirmed])
-        ResponseEnum.new(request, channel, Bitcoin::Grpc::WatchTxConfirmedResponse).each
+        ResponseEnum.new(request, channel, WatchTxConfirmedResponseBuilder).each
       end
 
       def watch_utxo(request, call)
@@ -31,7 +31,7 @@ module Bitcoin
         watcher << request
         channel = Concurrent::Channel.new
         Receiver.spawn(:receiver, channel, publisher, [Bitcoin::Grpc::EventUtxoRegistered, Bitcoin::Grpc::EventUtxoSpent])
-        ResponseEnum.new(request, channel, Bitcoin::Grpc::WatchUtxoResponse).each
+        ResponseEnum.new(request, channel, WatchUtxoResponseBuilder).each
       end
 
       def watch_token(request, call)
@@ -39,7 +39,40 @@ module Bitcoin
         watcher << request
         channel = Concurrent::Channel.new
         Receiver.spawn(:receiver, channel, publisher, [Bitcoin::Grpc::EventTokenIssued, Bitcoin::Grpc::EventTokenTransfered])
-        ResponseEnum.new(request, channel, Bitcoin::Grpc::WatchTokenResponse).each
+        ResponseEnum.new(request, channel, WatchTokenResponseBuilder).each
+      end
+    end
+
+    class WatchTxConfirmedResponseBuilder
+      def self.build(event)
+        case event
+        when Bitcoin::Grpc::EventTxConfirmed
+          Bitcoin::Grpc::WatchTxConfirmedResponse.new(confirmed: event)
+        end
+      end
+    end
+
+    class WatchUtxoResponseBuilder
+      def self.build(event)
+        case event
+        when Bitcoin::Grpc::EventUtxoRegistered
+          Bitcoin::Grpc::WatchUtxoResponse.new(registered: event)
+        when Bitcoin::Grpc::EventUtxoSpent
+          Bitcoin::Grpc::WatchUtxoResponse.new(spent: event)
+        end
+      end
+    end
+
+    class WatchTokenResponseBuilder
+      def self.build(event)
+        case event
+        when Bitcoin::Grpc::EventTokenIssued
+          Bitcoin::Grpc::WatchTokenResponse.new(issued: event)
+        when Bitcoin::Grpc::EventTokenTransfered
+          Bitcoin::Grpc::WatchTokenResponse.new(transfered: event)
+        when Bitcoin::Grpc::EventTokenBurned
+          Bitcoin::Grpc::WatchTokenResponse.new(burned: event)
+        end
       end
     end
 
@@ -71,7 +104,7 @@ module Bitcoin
         logger.info("ResponseEnum#each")
         return enum_for(:each) unless block_given?
         loop do
-          yield wrapper_classs.new(event: channel.take)
+          yield wrapper_classs.build(channel.take)
         end
       end
     end
