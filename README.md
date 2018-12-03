@@ -22,7 +22,34 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+### Server
+
+```
+./bin/bitcoinrbd start --network=regtest
+```
+
+### Client
+
+
+```ruby
+
+stub = Bitcoin::Grpc::Blockchain::Stub.new("localhost:8080",:this_channel_is_insecure)
+
+# Watch utxo
+res = stub.watch_utxo(Bitcoin::Grpc::WatchUtxoRequest.new)
+res.each {|r| puts r}
+
+# Watch tx
+tx_hash = "0f35034353babea07fd27edee27575a6f88b3786af00e195b4811e512c798171"
+tx_payload = "0200000001427f57d9fb12521da329adbda27af5c03e03810ad476066a7e653a011fdbced7000000004847304402205ad2d520e37ce7a278029042bbad7c25d26addec6978a1db4e233dcb6603891f022013601c5211b836a77b02c630e17fa211e9ab1cc39b1cc003721c41b7a967a84201feffffff0200e1f5050000000016001445fcf49e1a60e8ea9ef774a0bc0839aaecf15fdd242d5a030000000016001425a2bbd8b5e1d90d061b5adbb3db283c39ebc8ab5a130000"
+res = stub.watch_tx_confirmed(Bitcoin::Grpc::WatchTxConfirmedRequest.new(tx_hash:tx_hash, tx_payload: tx_payload, confirmations: 3))
+res.each {|r| puts r}
+
+# Watch token (Open Assets)
+res = stub.watch_token(Bitcoin::Grpc::WatchTokenRequest.new(asset_type: ))
+res.each {|r| puts r}
+
+```
 
 ## Development
 
