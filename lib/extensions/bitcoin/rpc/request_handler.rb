@@ -9,7 +9,7 @@ module Bitcoin
             tx_hash: u.tx_hash,
             index: u.index,
             value: u.value,
-            script_pubkey: u.script_pubkey.to_payload.bth,
+            script_pubkey: u.script_pubkey,
             confirmations: height - u.block_height
           }
         end
@@ -33,6 +33,12 @@ module Bitcoin
         account.to_h
       rescue
         {}
+      end
+
+      def signrawtransaction(account_name, payload)
+        tx = Bitcoin::Tx.parse_from_payload(payload.htb)
+        signed_tx = Bitcoin::Wallet::Signer.sign(node, account_name, tx)
+        { hex: signed_tx.to_payload.bth }
       end
     end
   end

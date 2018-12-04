@@ -85,6 +85,14 @@ module Bitcoin
         end
       end
 
+      def get_utxo(out_point)
+        level_db.batch do
+          key = KEY_PREFIX[:out_point] + out_point.to_payload.bth
+          return unless level_db.contains?(key)
+          return Bitcoin::Grpc::Utxo.decode(level_db.get(key).htb)
+        end
+      end
+
       def list_unspent(current_block_height: 9999999, min: 0, max: 9999999, addresses: nil)
         if addresses
           list_unspent_by_addresses(current_block_height, min: min, max: max, addresses: addresses)

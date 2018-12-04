@@ -26,6 +26,7 @@ module Bitcoin
     autoload :AssetFeature, 'bitcoin/wallet/asset_feature'
     autoload :AssetHandler, 'bitcoin/wallet/asset_handler'
     autoload :Publisher, 'bitcoin/wallet/publisher'
+    autoload :Signer, 'bitcoin/wallet/signer'
     autoload :UtxoDB, 'bitcoin/wallet/utxo_db'
     autoload :UtxoHandler, 'bitcoin/wallet/utxo_handler'
   end
