@@ -6,7 +6,7 @@ module Bitcoin
       end
 
       KEY_PREFIX = {
-        asset_out_point: 'ao', # key: asset_type and out_point, value AssetOutput
+        asset_out_point: 'ao', # key: out_point, value AssetOutput
         asset_script_pubkey: 'as',     # key: asset_type, script_pubkey and out_point, value AssetOutput
         asset_height: 'ah',    # key: asset_type, block_height and out_point, value AssetOutput
       }
@@ -25,7 +25,7 @@ module Bitcoin
           payload = asset_output.to_proto.bth
 
           # out_point
-          key = KEY_PREFIX[:asset_out_point] + [asset_type].pack('C').bth + out_point.to_payload.bth
+          key = KEY_PREFIX[:asset_out_point] + out_point.to_payload.bth
           return if level_db.contains?(key)
           level_db.put(key, payload)
 
@@ -42,22 +42,21 @@ module Bitcoin
         end
       end
 
-      def delete_token(asset_type, utxo)
+      def delete_token(utxo)
         level_db.batch do
           out_point = Bitcoin::OutPoint.new(utxo.tx_hash, utxo.index)
 
-          key = KEY_PREFIX[:asset_out_point] + [asset_type].pack('C').bth + out_point.to_payload.bth
+          key = KEY_PREFIX[:asset_out_point] + out_point.to_payload.bth
           return unless level_db.contains?(key)
           asset_output = Bitcoin::Grpc::AssetOutput.decode(level_db.get(key).htb)
           level_db.delete(key)
 
-
           if utxo.script_pubkey
-            key = KEY_PREFIX[:asset_script_pubkey] + [asset_type].pack('C').bth + utxo.script_pubkey + out_point.to_payload.bth
+            key = KEY_PREFIX[:asset_script_pubkey] + asset_output.asset_type.bth + utxo.script_pubkey + out_point.to_payload.bth
             level_db.delete(key)
           end
 
-          key = KEY_PREFIX[:asset_height] + [asset_type].pack('C').bth + [utxo.block_height].pack('N').bth + out_point.to_payload.bth
+          key = KEY_PREFIX[:asset_height] + asset_output.asset_type.bth + [utxo.block_height].pack('N').bth + out_point.to_payload.bth
           level_db.delete(key)
           return asset_output
         end
@@ -74,11 +73,25 @@ module Bitcoin
         end
       end
 
+      def list_unspent_assets_in_account(asset_type, asset_id, account, current_block_height: 9999999, min: 0 , max: 9999999)
+        return [] unless account
+        script_pubkeys = account.watch_targets.map { |t| Bitcoin::Script.to_p2wpkh(t).to_payload.bth }
+        list_unspent_assets_by_script_pubkeys(asset_type, asset_id, current_block_height, min: min, max: max, script_pubkeys: script_pubkeys)
+      end
+
       def get_asset_balance(asset_type, asset_id, account, current_block_height: 9999999, min: 0, max: 9999999, addresses: nil)
         raise NotImplementedError.new("asset_type should not be nil.") unless asset_type
         raise ArgumentError.new('asset_id should not be nil') unless asset_id
 
-        list_unspent_assets_in_account(asset_type, asset_id, account, current_block_height, min: min, max: max).sum { |u| u.asset_quantity }
+        list_unspent_assets_in_account(asset_type, asset_id, account, current_block_height: current_block_height, min: min, max: max).sum { |u| u.asset_quantity }
+      end
+
+      def list_uncolored_unspent_in_account(account, current_block_height: 9999999, min: 0, max: 9999999)
+        utxos = list_unspent_in_account(account, current_block_height: current_block_height, min: min, max: max)
+        utxos.delete_if do |utxo|
+          out_point = Bitcoin::OutPoint.new(utxo.tx_hash, utxo.index)
+          level_db.contains?(KEY_PREFIX[:asset_out_point] + out_point.to_payload.bth)
+        end
       end
 
       private
@@ -111,12 +124,6 @@ module Bitcoin
           to = KEY_PREFIX[:asset_script_pubkey] + [asset_type].pack('C').bth + key + 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
           assets_between(from, to, asset_id).with_height(min_height, max_height)
         end.flatten
-      end
-
-      def list_unspent_assets_in_account(asset_type, asset_id, account, current_block_height, min: 0 , max: 9999999)
-        return [] unless account
-        script_pubkeys = account.watch_targets.map { |t| Bitcoin::Script.to_p2wpkh(t).to_payload.bth }
-        list_unspent_assets_by_script_pubkeys(asset_type, asset_id, current_block_height, min: min, max: max, script_pubkeys: script_pubkeys)
       end
     end
   end

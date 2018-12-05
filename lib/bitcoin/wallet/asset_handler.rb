@@ -18,7 +18,7 @@ module Bitcoin
         case message
         when Bitcoin::Grpc::EventUtxoSpent
           tx = Bitcoin::Tx.parse_from_payload(message.tx_payload.htb)
-          utxo_db.delete_token(AssetFeature::AssetType::OPEN_ASSETS, message.utxo) if tx.open_assets?
+          utxo_db.delete_token(message.utxo) if tx.open_assets?
         when Bitcoin::Grpc::WatchAssetIdAssignedRequest
           tx = Bitcoin::Tx.parse_from_payload(message.tx_payload.htb)
           case

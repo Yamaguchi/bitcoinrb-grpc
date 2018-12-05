@@ -19,6 +19,18 @@ module Bitcoin
         end
       end
 
+      def list_uncolored_unspent(account_name: nil, current_block_height: 9999999, min: 0, max: 9999999)
+        account = find_account(account_name)
+        return [] unless account
+        utxo_db.list_uncolored_unspent_in_account(account, current_block_height: current_block_height, min: min, max: max)
+      end
+
+      def list_unspent_assets_in_account(asset_type, asset_id, account_name: nil, current_block_height: 9999999, min: 0, max: 9999999)
+        account = find_account(account_name)
+        return [] unless account
+        utxo_db.list_unspent_assets_in_account(asset_type, asset_id, account, current_block_height: current_block_height, min: min, max: max)
+      end
+
       private
 
       def initialize(wallet_id, path_prefix)

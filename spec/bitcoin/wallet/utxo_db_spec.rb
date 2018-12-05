@@ -1,6 +1,8 @@
 RSpec.describe Bitcoin::Wallet::UtxoDB do
   let(:wallet) { Bitcoin::Wallet::Base.create(1, 'tmp/wallet_db/').tap { |w| w.create_account('hoge') } }
   let(:db) { wallet.utxo_db }
+  let(:account) { wallet.accounts.first }
+
   after do
     db.close
     wallet.close
@@ -87,8 +89,6 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
   end
 
   describe 'get_balance' do
-    let(:account) { wallet.accounts.first }
-
     before do
       db.save_utxo(out_point1, 3, script_pubkey1, 1)
       db.save_utxo(out_point2, 6, script_pubkey2, 4)
@@ -153,7 +153,7 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
     end
 
     describe '#delete_token' do
-      subject { db.delete_token(asset_type, utxo) }
+      subject { db.delete_token(utxo) }
 
       before { db.save_token(asset_type, asset_id, asset_quantity, utxo) }
 
@@ -161,13 +161,127 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
     end
 
     describe '#list_unspent_assets' do
-      # list_unspent_assets(asset_type, asset_id, current_block_height: 9999999, min: 0, max: 9999999, addresses: nil)
+      subject { db.list_unspent_assets(asset_type1, asset_id1) }
 
+      before do
+        utxo1 = db.save_utxo(out_point1, 3, script_pubkey1, 1)
+        utxo2 = db.save_utxo(out_point2, 6, script_pubkey2, 4)
+        utxo3 = db.save_utxo(out_point3, 9, script_pubkey3, 7)
+        utxo4 = db.save_utxo(out_point4, 12, script_pubkey4, 10)
+        db.save_token(asset_type1, asset_id1, 2, utxo1)
+        db.save_token(asset_type1, asset_id1, 5, utxo2)
+        db.save_token(asset_type1, asset_id2, 8, utxo3)
+        db.save_token(asset_type2, asset_id1, 11, utxo4)
+      end
+
+      let(:asset_type1) { Bitcoin::Wallet::AssetFeature::AssetType::OPEN_ASSETS }
+      let(:asset_type2) { 2 } # Unknown
+      let(:asset_id1) { 'ALn3aK1fSuG27N96UGYB1kUYUpGKRhBuBC' }
+      let(:asset_id2) { '11111111111111111111111111111111111' }
+      let(:out_point1) { Bitcoin::OutPoint.new('000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f', 0) }
+      let(:out_point2) { Bitcoin::OutPoint.new('000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f', 1) }
+      let(:out_point3) { Bitcoin::OutPoint.new('f0e0d0c0b0a090807060504030201000f0e0d0c0b0a090807060504030201000', 0) }
+      let(:out_point4) { Bitcoin::OutPoint.new('f0e0d0c0b0a090807060504030201000f0e0d0c0b0a090807060504030201000', 1) }
+      let(:script_pubkey1) { Bitcoin::Script.to_p2wpkh(account.create_receive.hash160).to_payload.bth }
+      let(:script_pubkey2) { Bitcoin::Script.to_p2wpkh(account.create_receive.hash160).to_payload.bth }
+      let(:script_pubkey3) { Bitcoin::Script.to_p2wpkh('a402e0e309dfa1d9a168ceace52e2b1b8baf3da8').to_payload.bth }
+      let(:script_pubkey4) { Bitcoin::Script.to_p2wpkh(account.create_receive.hash160).to_payload.bth }
+
+      it { expect(subject.size).to eq 2 }
+      it { expect(subject[0].asset_quantity).to eq 2 }
+      it { expect(subject[1].asset_quantity).to eq 5 }
     end
 
-    describe '#get_asset_balance' do
-      # get_asset_balance(asset_type, asset_id, account, current_block_height: 9999999, min: 0, max: 9999999, addresses: nil)
+    describe '#list_unspent_assets_in_account' do
+      subject { db.list_unspent_assets_in_account(asset_type1, asset_id1, account) }
 
+      before do
+        utxo1 = db.save_utxo(out_point1, 3, script_pubkey1, 1)
+        utxo2 = db.save_utxo(out_point2, 6, script_pubkey2, 4)
+        utxo3 = db.save_utxo(out_point3, 9, script_pubkey3, 7)
+        utxo4 = db.save_utxo(out_point4, 12, script_pubkey4, 10)
+        db.save_token(asset_type1, asset_id1, 2, utxo1)
+        db.save_token(asset_type1, asset_id1, 5, utxo2)
+        db.save_token(asset_type1, asset_id1, 8, utxo3)
+        db.save_token(asset_type2, asset_id1, 11, utxo4)
+      end
+
+      let(:asset_type1) { Bitcoin::Wallet::AssetFeature::AssetType::OPEN_ASSETS }
+      let(:asset_type2) { 2 } # Unknown
+      let(:asset_id1) { 'ALn3aK1fSuG27N96UGYB1kUYUpGKRhBuBC' }
+      let(:out_point1) { Bitcoin::OutPoint.new('000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f', 0) }
+      let(:out_point2) { Bitcoin::OutPoint.new('000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f', 1) }
+      let(:out_point3) { Bitcoin::OutPoint.new('f0e0d0c0b0a090807060504030201000f0e0d0c0b0a090807060504030201000', 0) }
+      let(:out_point4) { Bitcoin::OutPoint.new('f0e0d0c0b0a090807060504030201000f0e0d0c0b0a090807060504030201000', 1) }
+      let(:script_pubkey1) { Bitcoin::Script.to_p2wpkh(account.create_receive.hash160).to_payload.bth }
+      let(:script_pubkey2) { Bitcoin::Script.to_p2wpkh(account.create_receive.hash160).to_payload.bth }
+      let(:script_pubkey3) { Bitcoin::Script.to_p2wpkh('a402e0e309dfa1d9a168ceace52e2b1b8baf3da8').to_payload.bth }
+      let(:script_pubkey4) { Bitcoin::Script.to_p2wpkh(account.create_receive.hash160).to_payload.bth }
+
+      it { expect(subject.size).to eq 2 }
+      it { expect(subject[0].asset_quantity).to eq 2 }
+      it { expect(subject[1].asset_quantity).to eq 5 }
+    end
+
+
+    describe '#get_asset_balance' do
+      subject { db.get_asset_balance(asset_type1, asset_id1, account) }
+
+      before do
+        utxo1 = db.save_utxo(out_point1, 3, script_pubkey1, 1)
+        utxo2 = db.save_utxo(out_point2, 6, script_pubkey2, 4)
+        utxo3 = db.save_utxo(out_point3, 9, script_pubkey3, 7)
+        utxo4 = db.save_utxo(out_point4, 12, script_pubkey4, 10)
+        db.save_token(asset_type1, asset_id1, 2, utxo1)
+        db.save_token(asset_type1, asset_id1, 5, utxo2)
+        db.save_token(asset_type1, asset_id2, 8, utxo3)
+        db.save_token(asset_type2, asset_id1, 11, utxo4)
+      end
+
+      let(:asset_type1) { Bitcoin::Wallet::AssetFeature::AssetType::OPEN_ASSETS }
+      let(:asset_type2) { 2 } # Unknown
+      let(:asset_id1) { 'ALn3aK1fSuG27N96UGYB1kUYUpGKRhBuBC' }
+      let(:asset_id2) { '11111111111111111111111111111111111' }
+      let(:out_point1) { Bitcoin::OutPoint.new('000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f', 0) }
+      let(:out_point2) { Bitcoin::OutPoint.new('000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f', 1) }
+      let(:out_point3) { Bitcoin::OutPoint.new('f0e0d0c0b0a090807060504030201000f0e0d0c0b0a090807060504030201000', 0) }
+      let(:out_point4) { Bitcoin::OutPoint.new('f0e0d0c0b0a090807060504030201000f0e0d0c0b0a090807060504030201000', 1) }
+      let(:script_pubkey1) { Bitcoin::Script.to_p2wpkh(account.create_receive.hash160).to_payload.bth }
+      let(:script_pubkey2) { Bitcoin::Script.to_p2wpkh(account.create_receive.hash160).to_payload.bth }
+      let(:script_pubkey3) { Bitcoin::Script.to_p2wpkh('a402e0e309dfa1d9a168ceace52e2b1b8baf3da8').to_payload.bth }
+      let(:script_pubkey4) { Bitcoin::Script.to_p2wpkh(account.create_receive.hash160).to_payload.bth }
+
+      it { expect(subject).to eq 7 }
+    end
+
+    describe '#list_uncolored_unspent_in_account' do
+      subject { db.list_uncolored_unspent_in_account(account) }
+
+      before do
+        utxo1 = db.save_utxo(out_point1, 3, script_pubkey1, 1)
+        utxo2 = db.save_utxo(out_point2, 6, script_pubkey2, 4)
+        utxo3 = db.save_utxo(out_point3, 9, script_pubkey3, 7)
+        utxo4 = db.save_utxo(out_point4, 12, script_pubkey4, 10)
+        db.save_token(asset_type1, asset_id1, 2, utxo1)
+        db.save_token(asset_type1, asset_id2, 8, utxo3)
+        db.save_token(asset_type2, asset_id1, 11, utxo4)
+      end
+
+      let(:asset_type1) { Bitcoin::Wallet::AssetFeature::AssetType::OPEN_ASSETS }
+      let(:asset_type2) { 2 } # Unknown
+      let(:asset_id1) { 'ALn3aK1fSuG27N96UGYB1kUYUpGKRhBuBC' }
+      let(:asset_id2) { '11111111111111111111111111111111111' }
+      let(:out_point1) { Bitcoin::OutPoint.new('000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f', 0) }
+      let(:out_point2) { Bitcoin::OutPoint.new('000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f', 1) }
+      let(:out_point3) { Bitcoin::OutPoint.new('f0e0d0c0b0a090807060504030201000f0e0d0c0b0a090807060504030201000', 0) }
+      let(:out_point4) { Bitcoin::OutPoint.new('f0e0d0c0b0a090807060504030201000f0e0d0c0b0a090807060504030201000', 1) }
+      let(:script_pubkey1) { Bitcoin::Script.to_p2wpkh(account.create_receive.hash160).to_payload.bth }
+      let(:script_pubkey2) { Bitcoin::Script.to_p2wpkh(account.create_receive.hash160).to_payload.bth }
+      let(:script_pubkey3) { Bitcoin::Script.to_p2wpkh('a402e0e309dfa1d9a168ceace52e2b1b8baf3da8').to_payload.bth }
+      let(:script_pubkey4) { Bitcoin::Script.to_p2wpkh(account.create_receive.hash160).to_payload.bth }
+
+      it { expect(subject.size).to eq 1 }
+      it { expect(subject[0].value).to eq 6 }
     end
   end
 end
