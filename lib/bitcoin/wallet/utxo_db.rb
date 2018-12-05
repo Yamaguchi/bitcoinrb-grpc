@@ -101,8 +101,14 @@ module Bitcoin
         end
       end
 
+      def list_unspent_in_account(account, current_block_height: 9999999, min: 0, max: 9999999)
+        return [] unless account
+        script_pubkeys = account.watch_targets.map { |t| Bitcoin::Script.to_p2wpkh(t).to_payload.bth }
+        list_unspent_by_script_pubkeys(current_block_height, min: min, max: max, script_pubkeys: script_pubkeys)
+      end
+
       def get_balance(account, current_block_height: 9999999, min: 0, max: 9999999)
-        list_unspent_in_account(account, current_block_height, min: min, max: max).sum { |u| u.value }
+        list_unspent_in_account(account, current_block_height: current_block_height, min: min, max: max).sum { |u| u.value }
       end
 
       private
@@ -139,12 +145,6 @@ module Bitcoin
           to = KEY_PREFIX[:script] + key + 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
           utxos_between(from, to).with_height(min_height, max_height)
         end.flatten
-      end
-
-      def list_unspent_in_account(account, current_block_height, min: 0, max: 9999999)
-        return [] unless account
-        script_pubkeys = account.watch_targets.map { |t| Bitcoin::Script.to_p2wpkh(t).to_payload.bth }
-        list_unspent_by_script_pubkeys(current_block_height, min: min, max: max, script_pubkeys: script_pubkeys)
       end
     end
   end

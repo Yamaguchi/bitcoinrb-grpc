@@ -15,6 +15,20 @@ module Bitcoin
         end
       end
 
+      def listunspentinaccount(account_name, min = 0, max = 999999)
+        height = node.chain.latest_block.height
+        utxos = node.wallet.list_unspent(account_name: account_name, current_block_height: height, min: min, max: max)
+        utxos.map do |u|
+          {
+            tx_hash: u.tx_hash,
+            index: u.index,
+            value: u.value,
+            script_pubkey: u.script_pubkey,
+            confirmations: height - u.block_height
+          }
+        end
+      end
+
       def getbalance(account_name)
         node.wallet.get_balance(account_name)
       end

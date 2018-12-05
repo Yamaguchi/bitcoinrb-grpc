@@ -9,8 +9,14 @@ module Bitcoin
         utxo_db.get_balance(account)
       end
 
-      def list_unspent(current_block_height: 9999999, min: 0, max: 9999999, addresses: nil)
-        utxo_db.list_unspent(current_block_height: current_block_height, min: min, max: max, addresses: addresses)
+      def list_unspent(account_name: nil, current_block_height: 9999999, min: 0, max: 9999999, addresses: nil)
+        if account_name
+          account = find_account(account_name)
+          return [] unless account
+          utxo_db.list_unspent_in_account(account, current_block_height: current_block_height, min: min, max: max)
+        else
+          utxo_db.list_unspent(current_block_height: current_block_height, min: min, max: max, addresses: addresses)
+        end
       end
 
       private
