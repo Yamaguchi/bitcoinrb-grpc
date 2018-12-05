@@ -5,7 +5,7 @@ module Bitcoin
 
       def get_balance(account_name)
         account = find_account(account_name)
-        raise ArgumentError.new('Account does not exist.') unless account
+        return 0 unless account
         utxo_db.get_balance(account)
       end
 
