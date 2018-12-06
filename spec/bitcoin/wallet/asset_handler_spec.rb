@@ -3,7 +3,7 @@ RSpec.describe Bitcoin::Wallet::AssetHandler do
     subject do
       asset_handler << message
       asset_handler.ask(:await).wait
-      publisher.ask(:await).wait
+
     end
 
     let(:asset_handler) { described_class.spawn(:asset, spv, publisher) }
@@ -42,29 +42,33 @@ RSpec.describe Bitcoin::Wallet::AssetHandler do
     end
 
     context 'with Bitcoin::Grpc::WatchAssetIdAssignedRequest' do
-      let(:message) { Bitcoin::Grpc::WatchAssetIdAssignedRequest.new(tx_hash: tx.tx_hash, tx_payload: tx_payload, utxo: utxo) }
+      let(:message) { Bitcoin::Grpc::WatchAssetIdAssignedRequest.new(tx_hash: tx.tx_hash, tx_payload: tx_payload) }
 
       context 'when transaction is issue transaction' do
-        let(:index) { 0 }
-
         before do
-          allow(Bitcoin::Grpc::OapService).to receive(:outputs_with_open_asset_id).and_return([{'asset_id' => 'oSqzjKUyr2ux62BuP2vzNm11t1RFGt2jr2', 'asset_quantity' => 1, 'oa_output_type' => 'issuance'}, { 'oa_output_type' => 'nulldata' }])
+          allow(Bitcoin::Grpc::OapService).to receive(:outputs_with_open_asset_id).and_return([{'asset_id' => 'oSqzjKUyr2ux62BuP2vzNm11t1RFGt2jr2', 'asset_quantity' => 1, 'oa_output_type' => 'issuance', 'n' => 0}, { 'oa_output_type' => 'nulldata', 'n' => 1 }])
+          out_point = Bitcoin::OutPoint.new('114c88c1be09136dde076d3fad7069672692cf4340485ccbb273d7b37b0cd791', 0)
+          db.save_utxo(out_point, 3, script_pubkey, 1)
         end
 
         it do
           expect(publisher).to receive(:<<).with(Bitcoin::Grpc::EventTokenIssued)
           subject
+          publisher.ask(:await).wait
         end
       end
 
       context 'when transaction is transfer transaction' do
         before do
-          allow(Bitcoin::Grpc::OapService).to receive(:outputs_with_open_asset_id).and_return([{ 'oa_output_type' => 'nulldata' }, {'asset_id' => 'oSqzjKUyr2ux62BuP2vzNm11t1RFGt2jr2', 'asset_quantity' => 1, 'oa_output_type' => 'transfer'}])
+          allow(Bitcoin::Grpc::OapService).to receive(:outputs_with_open_asset_id).and_return([{ 'oa_output_type' => 'nulldata' , 'n' => 0}, {'asset_id' => 'oSqzjKUyr2ux62BuP2vzNm11t1RFGt2jr2', 'asset_quantity' => 1, 'oa_output_type' => 'transfer', 'n' => 1}])
+          out_point = Bitcoin::OutPoint.new('114c88c1be09136dde076d3fad7069672692cf4340485ccbb273d7b37b0cd791', 1)
+          db.save_utxo(out_point, 3, script_pubkey, 1)
         end
 
         it do
           expect(publisher).to receive(:<<).with(Bitcoin::Grpc::EventTokenTransfered)
           subject
+          publisher.ask(:await).wait
         end
       end
     end

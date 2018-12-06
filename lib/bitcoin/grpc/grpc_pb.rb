@@ -35,7 +35,6 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "bitcoin.grpc.WatchAssetIdAssignedRequest" do
     optional :tx_hash, :string, 1
     optional :tx_payload, :string, 2
-    optional :utxo, :message, 3, "bitcoin.grpc.Utxo"
   end
   add_message "bitcoin.grpc.EventTxConfirmed" do
     optional :tx_hash, :string, 1
