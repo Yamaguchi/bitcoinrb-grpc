@@ -11,7 +11,7 @@ module Bitcoin
         nil
       end
 
-      def oae_url
+      def self.oae_url
         case
         when Bitcoin.chain_params.mainnet?
           'https://www.oaexplorer.com/tx/'

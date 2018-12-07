@@ -9,18 +9,19 @@ module Bitcoin
         s.run_till_terminated
       end
 
-      attr_reader :spv, :watcher, :publisher, :logger
+      attr_reader :spv, :utxo_handler, :asset_handler, :publisher, :logger
 
       def initialize(spv)
         @spv = spv
         @publisher = Bitcoin::Wallet::Publisher.spawn(:publisher)
-        @watcher = Bitcoin::Wallet::UtxoHandler.spawn(:watcher, spv, publisher)
+        @utxo_handler = Bitcoin::Wallet::UtxoHandler.spawn(:utxo_handler, spv, publisher)
+        @asset_handler = Bitcoin::Wallet::AssetHandler.spawn(:asset_handler, spv, publisher)
         @logger = Bitcoin::Logger.create(:debug)
       end
 
       def watch_tx_confirmed(request, call)
         logger.info("watch_tx_confirmed: #{request}")
-        watcher << request
+        utxo_handler << request
         channel = Concurrent::Channel.new
         Receiver.spawn(:receiver, channel, publisher, [Bitcoin::Grpc::EventTxConfirmed])
         ResponseEnum.new(request, channel, WatchTxConfirmedResponseBuilder).each
@@ -28,7 +29,7 @@ module Bitcoin
 
       def watch_utxo(request, call)
         logger.info("watch_utxo: #{request}")
-        watcher << request
+        utxo_handler << request
         channel = Concurrent::Channel.new
         Receiver.spawn(:receiver, channel, publisher, [Bitcoin::Grpc::EventUtxoRegistered, Bitcoin::Grpc::EventUtxoSpent])
         ResponseEnum.new(request, channel, WatchUtxoResponseBuilder).each
@@ -36,7 +37,7 @@ module Bitcoin
 
       def watch_token(request, call)
         logger.info("watch_token: #{request}")
-        watcher << request
+        utxo_handler << request
         channel = Concurrent::Channel.new
         Receiver.spawn(:receiver, channel, publisher, [Bitcoin::Grpc::EventTokenIssued, Bitcoin::Grpc::EventTokenTransfered])
         ResponseEnum.new(request, channel, WatchTokenResponseBuilder).each

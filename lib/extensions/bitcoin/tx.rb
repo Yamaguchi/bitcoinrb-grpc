@@ -5,7 +5,7 @@ module Bitcoin
     end
 
     def open_assets?
-      outputs.find(&:open_assets_marker?)
+      !outputs.find(&:open_assets_marker?).nil?
     end
   end
 end

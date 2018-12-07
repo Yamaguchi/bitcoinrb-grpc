@@ -12,6 +12,7 @@ module Bitcoin
         publisher << [:subscribe, Bitcoin::Grpc::WatchAssetIdAssignedRequest]
         @publisher = publisher
         @utxo_db = spv.wallet.utxo_db
+        @logger = Bitcoin::Logger.create(:debug)
       end
 
       def on_message(message)
@@ -34,6 +35,7 @@ module Bitcoin
                 utxo = utxo_db.get_utxo(out_point)
                 next unless utxo
                 asset_output = utxo_db.save_token(AssetFeature::AssetType::OPEN_ASSETS, asset_id, asset_quantity, utxo)
+                next unless asset_output
                 if oa_output_type == 'issuance'
                   publisher << Bitcoin::Grpc::EventTokenIssued.new(asset: asset_output)
                 else
