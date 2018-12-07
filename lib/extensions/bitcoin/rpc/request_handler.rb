@@ -68,6 +68,10 @@ module Bitcoin
         node.wallet.get_balance(account_name)
       end
 
+      def getassetbalance(account_name, asset_type = Bitcoin::Wallet::AssetFeature::AssetType::OPEN_ASSETS , asset_id = nil)
+        node.wallet.get_asset_balance(asset_type, asset_id, account_name: account_name)
+      end
+
       # create new bitcoin address for receiving payments.
       def getnewaddress(account_name)
         address = node.wallet.generate_new_address(account_name)
