@@ -48,8 +48,9 @@ module Bitcoin
         assets = node.wallet.list_unspent_assets_in_account(asset_type, asset_id, account_name: account_name, current_block_height: height, min: min, max: max).map do |asset|
           out_point = Bitcoin::OutPoint.new(asset.tx_hash, asset.index)
           utxo = node.wallet.utxo_db.get_utxo(out_point)
+          next unless utxo
           [asset, utxo]
-        end
+        end.compact
         assets = assets.map do |(asset, utxo)|
           {
             tx_hash: utxo.tx_hash,

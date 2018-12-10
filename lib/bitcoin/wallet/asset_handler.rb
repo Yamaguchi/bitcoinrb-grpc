@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'jsonclient'
-
 module Bitcoin
   module Wallet
     class AssetHandler < Concurrent::Actor::RestartingContext
@@ -19,9 +17,11 @@ module Bitcoin
         case message
         when Bitcoin::Grpc::EventUtxoSpent
           tx = Bitcoin::Tx.parse_from_payload(message.tx_payload.htb)
+          log(::Logger::DEBUG, "tx=#{tx}, open_assets?=#{tx.open_assets?}")
           utxo_db.delete_token(message.utxo) if tx.open_assets?
         when Bitcoin::Grpc::WatchAssetIdAssignedRequest
           tx = Bitcoin::Tx.parse_from_payload(message.tx_payload.htb)
+          log(::Logger::DEBUG, "tx=#{tx}, open_assets?=#{tx.open_assets?}")
           case
           when tx.open_assets?
             outputs = Bitcoin::Grpc::OapService.outputs_with_open_asset_id(message.tx_hash)

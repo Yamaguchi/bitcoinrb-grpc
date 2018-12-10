@@ -12,6 +12,7 @@ module Bitcoin
       }
 
       def save_token(asset_type, asset_id, asset_quantity, utxo)
+        logger.info("UtxoDB#save_token:#{[asset_type, asset_id, asset_quantity, utxo.inspect]}")
         level_db.batch do
           asset_output = Bitcoin::Grpc::AssetOutput.new(
             asset_type: [asset_type].pack('C'),
@@ -43,6 +44,7 @@ module Bitcoin
       end
 
       def delete_token(utxo)
+        logger.info("UtxoDB#delete_token:#{utxo.inspect}")
         level_db.batch do
           out_point = Bitcoin::OutPoint.new(utxo.tx_hash, utxo.index)
 

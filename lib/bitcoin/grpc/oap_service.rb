@@ -1,3 +1,5 @@
+require 'jsonclient'
+
 module Bitcoin
   module Grpc
     module OapService
