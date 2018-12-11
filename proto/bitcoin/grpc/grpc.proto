@@ -11,8 +11,7 @@ service Blockchain {
 
 message WatchTxConfirmedRequest {
   string tx_hash = 1;
-  string tx_payload = 2;
-  uint32 confirmations = 3;
+  uint32 confirmations = 2;
 }
 
 message WatchTxConfirmedResponse {
@@ -51,7 +50,9 @@ message WatchAssetIdAssignedRequest {
 message EventTxConfirmed {
   string tx_hash = 1;
   string tx_payload = 2;
-  uint32 confirmations = 3;
+  uint32 block_height = 3;
+  uint32 tx_index = 4;
+  uint32 confirmations = 5;
 }
 
 message EventUtxoRegistered {

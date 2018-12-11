@@ -8,7 +8,8 @@ module Bitcoin
         script: 's',           # key: script_pubkey and out_point(tx_hash and index), value: Utxo
         height: 'h',           # key: block_height and out_point, value: Utxo
         tx_hash: 't',          # key: tx_hash of transaction, value: [block_height, tx_index]
-        block: 'b',            # key: block_height and tx_index, value: Tx
+        block: 'b',            # key: block_height and tx_index, value: tx_hash
+        tx_payload: 'p',            # key: tx_hash, value: Tx
       }
 
       attr_reader :level_db, :logger
@@ -23,24 +24,35 @@ module Bitcoin
         level_db.close
       end
 
-      def save_tx(tx, block_height, tx_index)
-        logger.info("UtxoDB#save_tx:#{[tx, block_height, tx_index]}")
+      def save_tx(tx_hash, tx_payload)
         level_db.batch do
           # tx_hash -> [block_height, tx_index]
-          key = KEY_PREFIX[:tx_hash] + tx.tx_hash
-          level_db.put(key, [block_height, tx_index].pack('N2').bth)
-
-          # block_hash and tx_index
-          key = KEY_PREFIX[:block] + [block_height, tx_index].pack('N2').bth
-          level_db.put(key, tx.to_payload.bth)
+          key = KEY_PREFIX[:tx_payload] + tx_hash
+          level_db.put(key, tx_payload)
         end
       end
 
-      # @return [block_height, tx_index]
-      def get_tx_position(tx_hash)
+      def save_tx_position(tx_hash, block_height, tx_index)
+        logger.info("UtxoDB#save_tx:#{[tx_hash, block_height, tx_index]}")
+        level_db.batch do
+          # tx_hash -> [block_height, tx_index]
+          key = KEY_PREFIX[:tx_hash] + tx_hash
+          level_db.put(key, [block_height, tx_index].pack('N2').bth)
+
+          # block_hash and tx_index -> tx_hash
+          key = KEY_PREFIX[:block] + [block_height, tx_index].pack('N2').bth
+          level_db.put(key, tx_hash)
+        end
+      end
+
+      # @return [block_height, tx_index, tx_payload]
+      def get_tx(tx_hash)
         key = KEY_PREFIX[:tx_hash] + tx_hash
-        return [nil, nil] unless level_db.contains?(key)
-        level_db.get(key).htb.unpack('N2')
+        return [] unless level_db.contains?(key)
+        block_height, tx_index = level_db.get(key).htb.unpack('N2')
+        key = KEY_PREFIX[:tx_payload] + tx_hash
+        tx_payload = level_db.get(key)
+        [block_height, tx_index, tx_payload]
       end
 
       def save_utxo(out_point, value, script_pubkey, block_height)

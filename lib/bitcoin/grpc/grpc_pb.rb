@@ -6,8 +6,7 @@ require 'google/protobuf'
 Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "bitcoin.grpc.WatchTxConfirmedRequest" do
     optional :tx_hash, :string, 1
-    optional :tx_payload, :string, 2
-    optional :confirmations, :uint32, 3
+    optional :confirmations, :uint32, 2
   end
   add_message "bitcoin.grpc.WatchTxConfirmedResponse" do
     oneof :event do
@@ -39,7 +38,9 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "bitcoin.grpc.EventTxConfirmed" do
     optional :tx_hash, :string, 1
     optional :tx_payload, :string, 2
-    optional :confirmations, :uint32, 3
+    optional :block_height, :uint32, 3
+    optional :tx_index, :uint32, 4
+    optional :confirmations, :uint32, 5
   end
   add_message "bitcoin.grpc.EventUtxoRegistered" do
     optional :tx_hash, :string, 1
