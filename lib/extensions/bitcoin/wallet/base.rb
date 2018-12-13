@@ -37,6 +37,11 @@ module Bitcoin
         utxo_db.list_unspent_assets_in_account(asset_type, asset_id, account, current_block_height: current_block_height, min: min, max: max)
       end
 
+      def close
+        db.close
+        utxo_db.close
+      end
+
       private
 
       def initialize(wallet_id, path_prefix)

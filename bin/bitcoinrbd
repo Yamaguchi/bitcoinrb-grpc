@@ -17,6 +17,7 @@ class BitcoinDaemon < DaemonSpawn::Base
     require 'extensions/bitcoin/wallet/base'
     require 'extensions/bitcoin/tx'
 
+    refresh_wallet
     node = Bitcoin::Node::SPV.new(conf)
     Thread.new { Bitcoin::Grpc::Server.run(node) }
     node.run
@@ -25,6 +26,11 @@ class BitcoinDaemon < DaemonSpawn::Base
   def stop(args)
     puts "Bitcoinrb daemon stop : #{Time.now} #{args}"
   end
+end
+
+def refresh_wallet
+  default_wallet = Bitcoin::Wallet::Base.current_wallet || Bitcoin::Wallet::Base.create(1)
+  default_wallet.close
 end
 
 class Bitcoinrbd < Thor
