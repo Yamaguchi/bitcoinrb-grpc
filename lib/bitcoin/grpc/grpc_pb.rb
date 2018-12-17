@@ -5,30 +5,36 @@ require 'google/protobuf'
 
 Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "bitcoin.grpc.WatchTxConfirmedRequest" do
-    optional :tx_hash, :string, 1
-    optional :confirmations, :uint32, 2
+    optional :id, :uint32, 1
+    optional :tx_hash, :string, 2
+    optional :confirmations, :uint32, 3
   end
   add_message "bitcoin.grpc.WatchTxConfirmedResponse" do
+    optional :id, :uint32, 1
     oneof :event do
-      optional :confirmed, :message, 1, "bitcoin.grpc.EventTxConfirmed"
+      optional :confirmed, :message, 2, "bitcoin.grpc.EventTxConfirmed"
     end
   end
   add_message "bitcoin.grpc.WatchUtxoRequest" do
+    optional :id, :uint32, 1
   end
   add_message "bitcoin.grpc.WatchUtxoResponse" do
+    optional :id, :uint32, 1
     oneof :event do
-      optional :registered, :message, 1, "bitcoin.grpc.EventUtxoRegistered"
-      optional :spent, :message, 2, "bitcoin.grpc.EventUtxoSpent"
+      optional :registered, :message, 2, "bitcoin.grpc.EventUtxoRegistered"
+      optional :spent, :message, 3, "bitcoin.grpc.EventUtxoSpent"
     end
   end
   add_message "bitcoin.grpc.WatchTokenRequest" do
-    optional :asset_type, :bytes, 1
+    optional :id, :uint32, 1
+    optional :asset_type, :bytes, 2
   end
   add_message "bitcoin.grpc.WatchTokenResponse" do
+    optional :id, :uint32, 1
     oneof :event do
-      optional :issued, :message, 1, "bitcoin.grpc.EventTokenIssued"
-      optional :transfered, :message, 2, "bitcoin.grpc.EventTokenTransfered"
-      optional :burned, :message, 3, "bitcoin.grpc.EventTokenBurned"
+      optional :issued, :message, 2, "bitcoin.grpc.EventTokenIssued"
+      optional :transfered, :message, 3, "bitcoin.grpc.EventTokenTransfered"
+      optional :burned, :message, 4, "bitcoin.grpc.EventTokenBurned"
     end
   end
   add_message "bitcoin.grpc.WatchAssetIdAssignedRequest" do
@@ -36,30 +42,36 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :tx_payload, :string, 2
   end
   add_message "bitcoin.grpc.EventTxConfirmed" do
-    optional :tx_hash, :string, 1
-    optional :tx_payload, :string, 2
-    optional :block_height, :uint32, 3
-    optional :tx_index, :uint32, 4
-    optional :confirmations, :uint32, 5
+    optional :request_id, :uint32, 1
+    optional :tx_hash, :string, 2
+    optional :tx_payload, :string, 3
+    optional :block_height, :uint32, 4
+    optional :tx_index, :uint32, 5
+    optional :confirmations, :uint32, 6
   end
   add_message "bitcoin.grpc.EventUtxoRegistered" do
-    optional :tx_hash, :string, 1
-    optional :tx_payload, :string, 2
-    optional :utxo, :message, 3, "bitcoin.grpc.Utxo"
+    optional :request_id, :uint32, 1
+    optional :tx_hash, :string, 2
+    optional :tx_payload, :string, 3
+    optional :utxo, :message, 4, "bitcoin.grpc.Utxo"
   end
   add_message "bitcoin.grpc.EventUtxoSpent" do
-    optional :tx_hash, :string, 1
-    optional :tx_payload, :string, 2
-    optional :utxo, :message, 3, "bitcoin.grpc.Utxo"
+    optional :request_id, :uint32, 1
+    optional :tx_hash, :string, 2
+    optional :tx_payload, :string, 3
+    optional :utxo, :message, 4, "bitcoin.grpc.Utxo"
   end
   add_message "bitcoin.grpc.EventTokenIssued" do
-    optional :asset, :message, 1, "bitcoin.grpc.AssetOutput"
+    optional :request_id, :uint32, 1
+    optional :asset, :message, 2, "bitcoin.grpc.AssetOutput"
   end
   add_message "bitcoin.grpc.EventTokenTransfered" do
+    optional :request_id, :uint32, 1
     optional :asset, :message, 2, "bitcoin.grpc.AssetOutput"
   end
   add_message "bitcoin.grpc.EventTokenBurned" do
-    optional :asset, :message, 3, "bitcoin.grpc.AssetOutput"
+    optional :request_id, :uint32, 1
+    optional :asset, :message, 4, "bitcoin.grpc.AssetOutput"
   end
   add_message "bitcoin.grpc.Utxo" do
     optional :tx_hash, :string, 1

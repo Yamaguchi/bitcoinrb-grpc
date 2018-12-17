@@ -10,35 +10,41 @@ service Blockchain {
 }
 
 message WatchTxConfirmedRequest {
-  string tx_hash = 1;
-  uint32 confirmations = 2;
+  uint32 id = 1;
+  string tx_hash = 2;
+  uint32 confirmations = 3;
 }
 
 message WatchTxConfirmedResponse {
+  uint32 id = 1;
   oneof event {
-    EventTxConfirmed confirmed = 1;
+    EventTxConfirmed confirmed = 2;
   }
 }
 
 message WatchUtxoRequest {
+  uint32 id = 1;
 }
 
 message WatchUtxoResponse {
+  uint32 id = 1;
   oneof event {
-    EventUtxoRegistered registered = 1;
-    EventUtxoSpent spent = 2;
+    EventUtxoRegistered registered = 2;
+    EventUtxoSpent spent = 3;
   }
 }
 
 message WatchTokenRequest {
-  bytes asset_type = 1;
+  uint32 id = 1;
+  bytes asset_type = 2;
 }
 
 message WatchTokenResponse {
+  uint32 id = 1;
   oneof event {
-    EventTokenIssued issued = 1;
-    EventTokenTransfered transfered = 2;
-    EventTokenBurned burned = 3;
+    EventTokenIssued issued = 2;
+    EventTokenTransfered transfered = 3;
+    EventTokenBurned burned = 4;
   }
 }
 
@@ -48,35 +54,41 @@ message WatchAssetIdAssignedRequest {
 }
 
 message EventTxConfirmed {
-  string tx_hash = 1;
-  string tx_payload = 2;
-  uint32 block_height = 3;
-  uint32 tx_index = 4;
-  uint32 confirmations = 5;
+  uint32 request_id = 1;
+  string tx_hash = 2;
+  string tx_payload = 3;
+  uint32 block_height = 4;
+  uint32 tx_index = 5;
+  uint32 confirmations = 6;
 }
 
 message EventUtxoRegistered {
-  string tx_hash = 1;
-  string tx_payload = 2;
-  Utxo utxo = 3;
+  uint32 request_id = 1;
+  string tx_hash = 2;
+  string tx_payload = 3;
+  Utxo utxo = 4;
 }
 
 message EventUtxoSpent {
-  string tx_hash = 1;
-  string tx_payload = 2;
-  Utxo utxo = 3;
+  uint32 request_id = 1;
+  string tx_hash = 2;
+  string tx_payload = 3;
+  Utxo utxo = 4;
 }
 
 message EventTokenIssued {
-  AssetOutput asset = 1;
+  uint32 request_id = 1;
+  AssetOutput asset = 2;
 }
 
 message EventTokenTransfered {
+  uint32 request_id = 1;
   AssetOutput asset = 2;
 }
 
 message EventTokenBurned {
-  AssetOutput asset = 3;
+  uint32 request_id = 1;
+  AssetOutput asset = 4;
 }
 
 message Utxo {

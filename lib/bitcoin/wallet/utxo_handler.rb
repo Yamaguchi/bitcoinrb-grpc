@@ -37,12 +37,12 @@ module Bitcoin
           next unless watch_targets.find { |target| output.script_pubkey == Bitcoin::Script.to_p2wpkh(target) }
           out_point = Bitcoin::OutPoint.new(tx.tx_hash, index)
           utxo = utxo_db.save_utxo(out_point, output.value, output.script_pubkey.to_payload.bth, block_height)
-          publisher << Bitcoin::Grpc::EventUtxoRegistered.new(tx_hash: tx.tx_hash, tx_payload: tx.to_payload.bth, utxo: utxo) if utxo
+          publisher << Bitcoin::Grpc::EventUtxoRegistered.new(request_id: 0, tx_hash: tx.tx_hash, tx_payload: tx.to_payload.bth, utxo: utxo) if utxo
         end
 
         tx.inputs.each do |input|
           utxo = utxo_db.delete_utxo(input.out_point)
-          publisher << Bitcoin::Grpc::EventUtxoSpent.new(tx_hash: tx.tx_hash, tx_payload: tx.to_payload.bth, utxo: utxo) if utxo
+          publisher << Bitcoin::Grpc::EventUtxoSpent.new(request_id: 0, tx_hash: tx.tx_hash, tx_payload: tx.to_payload.bth, utxo: utxo) if utxo
         end
 
         utxo_db.save_tx(tx.tx_hash, tx.to_payload.bth)
@@ -75,10 +75,12 @@ module Bitcoin
           case item
           when Bitcoin::Grpc::WatchTxConfirmedRequest
             height, tx_index, tx_payload = utxo_db.get_tx(item.tx_hash)
-            log(::Logger::DEBUG, "UtxoHandler#header:#{[height, tx_index]}")
+            log(::Logger::DEBUG, "UtxoHandler#header:#{[block_height, height, tx_index, item.confirmations]}")
+            log(::Logger::DEBUG, "UtxoHandler#header:#{item.inspect}")
             next unless (height || tx_index)
             if block_height >= height + item.confirmations
-              publisher << Bitcoin::Grpc::EventTxConfirmed.new(tx_hash: item.tx_hash, tx_payload: tx_payload, block_height: height, tx_index: tx_index, confirmations: item.confirmations)
+              log(::Logger::DEBUG, "UtxoHandler#header:publish")
+              publisher << Bitcoin::Grpc::EventTxConfirmed.new(request_id: item.id, tx_hash: item.tx_hash, tx_payload: tx_payload, block_height: height, tx_index: tx_index, confirmations: item.confirmations)
               watchings.delete(item)
             end
           else

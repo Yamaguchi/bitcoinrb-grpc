@@ -37,9 +37,9 @@ module Bitcoin
                 asset_output = utxo_db.save_token(AssetFeature::AssetType::OPEN_ASSETS, asset_id, asset_quantity, utxo)
                 next unless asset_output
                 if oa_output_type == 'issuance'
-                  publisher << Bitcoin::Grpc::EventTokenIssued.new(asset: asset_output)
+                  publisher << Bitcoin::Grpc::EventTokenIssued.new(request_id: 0, asset: asset_output)
                 else
-                  publisher << Bitcoin::Grpc::EventTokenTransfered.new(asset: asset_output)
+                  publisher << Bitcoin::Grpc::EventTokenTransfered.new(request_id: 0, asset: asset_output)
                 end
               end
             else
