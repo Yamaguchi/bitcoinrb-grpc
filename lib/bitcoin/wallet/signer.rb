@@ -3,12 +3,12 @@
 module Bitcoin
   module Wallet
     module Signer
-      def self.sign(node, account_name, tx)
-        account = find_account(node, account_name)
+      def self.sign(wallet, account_name, tx)
+        account = find_account(wallet, account_name)
         return unless account
 
         tx.inputs.each.with_index do |input, index|
-          spec = input_spec(node, account, tx, index)
+          spec = input_spec(wallet, account, tx, index)
           next unless spec
           sign_tx_for_p2wpkh(tx, index, spec[0], spec[1])
         end
@@ -17,38 +17,22 @@ module Bitcoin
 
       private
 
-      def self.input_spec(node, account, tx, index)
+      def self.input_spec(wallet, account, tx, index)
         input = tx.inputs[index]
         return unless input
-        utxo = node.wallet.utxo_db.get_utxo(input.out_point)
+        utxo = wallet.utxo_db.get_utxo(input.out_point)
         return unless utxo
         script_pubkey = utxo.script_pubkey
-        keys = account.watch_targets
-        key = nil
-        (0..account.receive_depth + 1).reverse_each do |key_index|
-          path = [account.path, 0, key_index].join('/')
-          temp_key = node.wallet.master_key.derive(path).key
-          if to_p2wpkh(temp_key).to_payload.bth == script_pubkey
-            key = temp_key
-            break
-          end
-        end
-        unless key
-          (0..account.change_depth + 1).reverse_each do |key_index|
-            path = [account.path, 1, key_index].join('/')
-            temp_key = node.wallet.master_key.derive(path).key
-            if to_p2wpkh(temp_key).to_payload.bth == script_pubkey
-              key = temp_key
-              break
-            end
-          end
-        end
+        _, _, key_purpose, key_index = wallet.db.get_key_index(script_pubkey)
+        return unless key_index
+        path = [account.path, key_purpose, key_index].join('/')
+        key = wallet.master_key.derive(path).key
         return unless key
         [key, utxo.value]
       end
 
-      def self.find_account(node, account_name)
-        node.wallet.accounts.find{|a| a.name == account_name}
+      def self.find_account(wallet, account_name)
+        wallet.accounts.find{|a| a.name == account_name}
       end
 
       def self.sign_tx_for_p2wpkh(tx, index, key, amount)

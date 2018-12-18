@@ -7,15 +7,12 @@ require 'bitcoin'
 require 'thor'
 require 'daemon_spawn'
 
+require 'bitcoin/grpc'
+
 class BitcoinDaemon < DaemonSpawn::Base
   def start(args)
     puts "Bitcoinrb daemon start : #{Time.now} #{args}"
     conf = Bitcoin::Node::Configuration.new(network: args.first[:network])
-
-    require 'bitcoin/grpc'
-    require 'extensions/bitcoin/rpc/request_handler'
-    require 'extensions/bitcoin/wallet/base'
-    require 'extensions/bitcoin/tx'
 
     refresh_wallet
     node = Bitcoin::Node::SPV.new(conf)

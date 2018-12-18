@@ -7,6 +7,7 @@ require 'leveldb'
 
 require 'extensions/bitcoin/rpc/request_handler'
 require 'extensions/bitcoin/wallet/base'
+require 'extensions/bitcoin/wallet/db'
 require 'extensions/bitcoin/tx'
 
 module Bitcoin

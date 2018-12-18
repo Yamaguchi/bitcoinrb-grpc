@@ -91,7 +91,7 @@ module Bitcoin
 
       def signrawtransaction(account_name, payload)
         tx = Bitcoin::Tx.parse_from_payload(payload.htb)
-        signed_tx = Bitcoin::Wallet::Signer.sign(node, account_name, tx)
+        signed_tx = Bitcoin::Wallet::Signer.sign(node.wallet, account_name, tx)
         { hex: signed_tx.to_payload.bth }
       end
     end
