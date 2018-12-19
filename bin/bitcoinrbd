@@ -7,7 +7,6 @@ require 'bitcoin'
 require 'thor'
 require 'daemon_spawn'
 
-require 'bitcoin/grpc'
 
 class BitcoinDaemon < DaemonSpawn::Base
   def start(args)
@@ -38,6 +37,9 @@ class Bitcoinrbd < Thor
   def start
     network = options['network'] ? options['network'].to_sym : :mainnet
     Bitcoin.chain_params = network
+
+    require 'bitcoin/grpc'
+
     FileUtils.mkdir_p(Bitcoin.base_dir)
     execute_daemon(['start', network: network])
   end
