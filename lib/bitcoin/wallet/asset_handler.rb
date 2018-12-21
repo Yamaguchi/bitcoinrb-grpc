@@ -25,24 +25,30 @@ module Bitcoin
           case
           when tx.open_assets?
             outputs = Bitcoin::Grpc::OapService.outputs_with_open_asset_id(message.tx_hash)
-            if outputs
-              outputs.each do |output|
-                asset_id = output['asset_id']
-                asset_quantity = output['asset_quantity']
-                oa_output_type = output['oa_output_type']
-                next unless asset_id
-                out_point = Bitcoin::OutPoint.new(tx.tx_hash, output['n'])
-                utxo = utxo_db.get_utxo(out_point)
-                next unless utxo
-                asset_output = utxo_db.save_token(AssetFeature::AssetType::OPEN_ASSETS, asset_id, asset_quantity, utxo)
-                next unless asset_output
-                if oa_output_type == 'issuance'
-                  publisher << Bitcoin::Grpc::EventTokenIssued.new(request_id: 0, asset: asset_output)
-                else
-                  publisher << Bitcoin::Grpc::EventTokenTransfered.new(request_id: 0, asset: asset_output)
+            begin
+              if outputs
+                outputs.each do |output|
+                  asset_id = output['asset_id']
+                  asset_id_as_hex = Bitcoin::Base58.decode(asset_id)[2...-8]
+                  asset_quantity = output['asset_quantity']
+                  oa_output_type = output['oa_output_type']
+
+                  next unless asset_id
+                  out_point = Bitcoin::OutPoint.new(tx.tx_hash, output['n'])
+                  utxo = utxo_db.get_utxo(out_point)
+                  next unless utxo
+                  asset_output = utxo_db.save_token(AssetFeature::AssetType::OPEN_ASSETS, asset_id_as_hex, asset_quantity, utxo)
+                  next unless asset_output
+                  if oa_output_type == 'issuance'
+                    publisher << Bitcoin::Grpc::EventTokenIssued.new(request_id: 0, asset: asset_output)
+                  else
+                    publisher << Bitcoin::Grpc::EventTokenTransfered.new(request_id: 0, asset: asset_output)
+                  end
                 end
+              else
+                raise 'can not get asset_id'
               end
-            else
+            rescue
               task = Concurrent::TimerTask.new(execution_interval: 60) do
                 self << message
                 task.shutdown
