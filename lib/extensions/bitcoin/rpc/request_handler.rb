@@ -45,7 +45,8 @@ module Bitcoin
 
       def listcoloredunspentinaccount(account_name, asset_type = Bitcoin::Wallet::AssetFeature::AssetType::OPEN_ASSETS , asset_id = nil, min = 0, max = 999999)
         height = node.chain.latest_block.height
-        assets = node.wallet.list_unspent_assets_in_account(asset_type, asset_id, account_name: account_name, current_block_height: height, min: min, max: max).map do |asset|
+        asset_id_as_hex = Bitcoin::Base58.decode(asset_id)[2...-8]
+        assets = node.wallet.list_unspent_assets_in_account(asset_type, asset_id_as_hex, account_name: account_name, current_block_height: height, min: min, max: max).map do |asset|
           out_point = Bitcoin::OutPoint.new(asset.tx_hash, asset.index)
           utxo = node.wallet.utxo_db.get_utxo(out_point)
           next unless utxo
