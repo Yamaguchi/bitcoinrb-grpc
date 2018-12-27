@@ -119,8 +119,9 @@ module Bitcoin
       end
 
       def list_unspent_assets_by_script_pubkeys(asset_type, asset_id, current_block_height, min: 0, max: 9999999, script_pubkeys: [])
-        max_height = current_block_height - min
-        min_height = current_block_height - max
+        max_height = [current_block_height - min, 0].max
+        min_height = [current_block_height - max, 0].max
+
         script_pubkeys.map do |key|
           from = KEY_PREFIX[:asset_script_pubkey] + [asset_type].pack('C').bth + key + '000000000000000000000000000000000000000000000000000000000000000000000000'
           to = KEY_PREFIX[:asset_script_pubkey] + [asset_type].pack('C').bth + key + 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'

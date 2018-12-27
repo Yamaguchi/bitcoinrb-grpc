@@ -29,11 +29,11 @@ module Bitcoin
               if outputs
                 outputs.each do |output|
                   asset_id = output['asset_id']
-                  asset_id_as_hex = Bitcoin::Base58.decode(asset_id)[2...-8]
+                  next unless asset_id
+                  asset_id_as_hex = Bitcoin::Base58.decode(asset_id)
                   asset_quantity = output['asset_quantity']
                   oa_output_type = output['oa_output_type']
 
-                  next unless asset_id
                   out_point = Bitcoin::OutPoint.new(tx.tx_hash, output['n'])
                   utxo = utxo_db.get_utxo(out_point)
                   next unless utxo
@@ -48,7 +48,9 @@ module Bitcoin
               else
                 raise 'can not get asset_id'
               end
-            rescue
+            rescue => e
+              log(::Logger::DEBUG, e.message)
+              log(::Logger::DEBUG, e.backtrace)
               task = Concurrent::TimerTask.new(execution_interval: 60) do
                 self << message
                 task.shutdown
