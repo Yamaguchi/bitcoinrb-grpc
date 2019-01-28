@@ -14,14 +14,16 @@ module Bitcoin
       end
 
       def self.oae_url
-        case
-        when Bitcoin.chain_params.mainnet?
-          'https://www.oaexplorer.com/tx/'
-        when Bitcoin.chain_params.testnet?
-          'https://testnet.oaexplorer.com/tx/'
-        when Bitcoin.chain_params.regtest?
-          'http://localhost:9292/tx/'
-        end
+        @@config ||= load_config
+        @@config['url']
+      end
+
+      def self.load_config
+        file = 'config.yml'
+        yml = YAML.load_file(file)
+        config = yml['open_assets_explorer']
+        raise "config.yml should contain 'open_assets_explorer' section." unless config
+        config
       end
     end
   end

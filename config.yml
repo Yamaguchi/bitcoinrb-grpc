@@ -1,0 +1,4 @@
+open_assets_explorer:
+  url: http://localhost:3000/tx/
+  #url: https://www.oaexplorer.com/tx/ # mainnet
+  #url: http://localhost:3000/tx/ # testnet
