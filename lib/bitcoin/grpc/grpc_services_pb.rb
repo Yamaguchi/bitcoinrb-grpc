@@ -18,6 +18,7 @@ module Bitcoin
         rpc :WatchTxConfirmed, WatchTxConfirmedRequest, stream(WatchTxConfirmedResponse)
         rpc :WatchUtxo, WatchUtxoRequest, stream(WatchUtxoResponse)
         rpc :WatchToken, WatchTokenRequest, stream(WatchTokenResponse)
+        rpc :GetBlockchainInfo, GetBlockchainInfoRequest, GetBlockchainInfoResponse
       end
 
       Stub = Service.rpc_stub_class

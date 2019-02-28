@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+require 'bitcoin'
+require 'bitcoin/grpc'
+
+begin
+  stub = Bitcoin::Grpc::Blockchain::Stub.new('localhost:8080', :this_channel_is_insecure)
+  request = Bitcoin::Grpc::GetBlockchainInfoRequest.new
+  response = stub.get_blockchain_info(request)
+  exit 0
+rescue => e
+  puts e.message
+  exit 1
+end

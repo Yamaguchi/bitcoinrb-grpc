@@ -19,6 +19,20 @@ module Bitcoin
         @logger = Bitcoin::Logger.create(:debug)
       end
 
+      def get_blockchain_info(request, call)
+        best_block = spv.chain.latest_block
+        GetBlockchainInfoResponse.new(
+          chain: Bitcoin.chain_params.network.to_s,
+          headers: best_block.height,
+          bestblockhash: best_block.header.block_id,
+          chainwork: best_block.header.work,
+          mediantime: spv.chain.mtp(best_block.block_hash)
+        )
+      rescue => e
+        logger.info("get_blockchain_info: #{e.message}")
+        logger.info("get_blockchain_info: #{e.backtrace}")
+      end
+
       def watch_tx_confirmed(request, call)
         logger.info("watch_tx_confirmed: #{request}")
         utxo_handler << request

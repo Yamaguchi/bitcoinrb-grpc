@@ -7,6 +7,7 @@ service Blockchain {
   rpc WatchTxConfirmed(WatchTxConfirmedRequest) returns (stream WatchTxConfirmedResponse);
   rpc WatchUtxo(WatchUtxoRequest) returns (stream WatchUtxoResponse);
   rpc WatchToken(WatchTokenRequest) returns (stream WatchTokenResponse);
+  rpc GetBlockchainInfo(GetBlockchainInfoRequest) returns (GetBlockchainInfoResponse);
 }
 
 message WatchTxConfirmedRequest {
@@ -51,6 +52,17 @@ message WatchTokenResponse {
 message WatchAssetIdAssignedRequest {
   string tx_hash = 1;
   string tx_payload = 2;
+}
+
+message GetBlockchainInfoRequest {
+
+}
+message GetBlockchainInfoResponse {
+  string chain = 1;
+  uint32 headers = 2;
+  string bestblockhash = 3;
+  uint32 chainwork = 4;
+  uint32 mediantime = 5;
 }
 
 message EventTxConfirmed {

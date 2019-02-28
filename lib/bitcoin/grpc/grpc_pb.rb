@@ -41,6 +41,15 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :tx_hash, :string, 1
     optional :tx_payload, :string, 2
   end
+  add_message "bitcoin.grpc.GetBlockchainInfoRequest" do
+  end
+  add_message "bitcoin.grpc.GetBlockchainInfoResponse" do
+    optional :chain, :string, 1
+    optional :headers, :uint32, 2
+    optional :bestblockhash, :string, 3
+    optional :chainwork, :uint32, 4
+    optional :mediantime, :uint32, 5
+  end
   add_message "bitcoin.grpc.EventTxConfirmed" do
     optional :request_id, :uint32, 1
     optional :tx_hash, :string, 2
@@ -99,6 +108,8 @@ module Bitcoin
     WatchTokenRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.WatchTokenRequest").msgclass
     WatchTokenResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.WatchTokenResponse").msgclass
     WatchAssetIdAssignedRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.WatchAssetIdAssignedRequest").msgclass
+    GetBlockchainInfoRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.GetBlockchainInfoRequest").msgclass
+    GetBlockchainInfoResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.GetBlockchainInfoResponse").msgclass
     EventTxConfirmed = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventTxConfirmed").msgclass
     EventUtxoRegistered = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventUtxoRegistered").msgclass
     EventUtxoSpent = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventUtxoSpent").msgclass
