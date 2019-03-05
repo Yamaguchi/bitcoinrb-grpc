@@ -63,8 +63,13 @@ module Bitcoin
           .each do |item|
             tx_index = tree.find_node(item.tx_hash).index
             log(::Logger::DEBUG, "UtxoHandler#merkleblock:#{[tx_index]}")
-            next unless tx_index
-            utxo_db.save_tx_position(item.tx_hash, block_height, tx_index)
+            if tx_index
+              utxo_db.save_tx_position(item.tx_hash, block_height, tx_index)
+            else
+              if publish_confirmed(item, block_height)
+                watchings.delete(item)
+              end
+            end
           end
       end
 
@@ -74,18 +79,21 @@ module Bitcoin
         watchings.select do |item|
           case item
           when Bitcoin::Grpc::WatchTxConfirmedRequest
-            height, tx_index, tx_payload = utxo_db.get_tx(item.tx_hash)
-            log(::Logger::DEBUG, "UtxoHandler#header:#{[block_height, height, tx_index, item.confirmations]}")
-            log(::Logger::DEBUG, "UtxoHandler#header:#{item.inspect}")
-            next unless (height || tx_index)
-            if block_height >= height + item.confirmations
-              log(::Logger::DEBUG, "UtxoHandler#header:publish")
-              publisher << Bitcoin::Grpc::EventTxConfirmed.new(request_id: item.id, tx_hash: item.tx_hash, tx_payload: tx_payload, block_height: height, tx_index: tx_index, confirmations: item.confirmations)
+            if publish_confirmed(item, block_height)
               watchings.delete(item)
             end
           else
           end
         end
+      end
+
+      def publish_confirmed(item, block_height)
+        height, tx_index, tx_payload = utxo_db.get_tx(item.tx_hash)
+        log(::Logger::DEBUG, "UtxoHandler#publish_confirmed:#{[block_height, height, tx_index, item.confirmations]}")
+        return false unless (height || tx_index)
+        return false if block_height < height + item.confirmations
+        publisher << Bitcoin::Grpc::EventTxConfirmed.new(request_id: item.id, tx_hash: item.tx_hash, tx_payload: tx_payload, block_height: height, tx_index: tx_index, confirmations: item.confirmations)
+        true
       end
     end
   end
