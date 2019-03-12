@@ -1,10 +1,11 @@
 module Bitcoin
   module Wallet
     class UtxoHandler < Concurrent::Actor::Context
-      attr_reader :watchings, :spv, :utxo_db, :publisher
+      attr_reader :watchings, :spv, :utxo_db, :publisher, :pendings
 
       def initialize(spv, publisher)
         @watchings = []
+        @pendings = []
         @spv = spv
         @spv.add_observer(self)
 
@@ -51,12 +52,18 @@ module Bitcoin
       end
 
       def merkleblock(data)
-        block_height = spv.chain.latest_block.height
-        tree = Bitcoin::MerkleTree.build_partial(data.tx_count, data.hashes, Bitcoin.byte_to_bit(data.flags.htb))
         tx_blockhash = data.header.block_hash
+        block = spv.chain.find_entry_by_hash(tx_blockhash)
+        if block
+          save_tx_position(data, block)
+        else
+          pendings << data
+        end
+      end
 
-        log(::Logger::DEBUG, "UtxoHandler#merkleblock:#{data.hashes}")
-
+      def save_tx_position(data, block)
+        tree = Bitcoin::MerkleTree.build_partial(data.tx_count, data.hashes, Bitcoin.byte_to_bit(data.flags.htb))
+        block_height = block.height
         watchings
           .select { |item| item.is_a? Bitcoin::Grpc::WatchTxConfirmedRequest }
           .select { |item| data.hashes.include?(item.tx_hash) }
@@ -69,8 +76,16 @@ module Bitcoin
       end
 
       def header(data)
-        log(::Logger::DEBUG, "UtxoHandler#header:#{[data, watchings]}")
         block_height = data[:height]
+        pendings.each do |pending_merkleblock|
+          tx_blockhash = pending_merkleblock.header.block_hash
+          block = spv.chain.find_entry_by_hash(tx_blockhash)
+          if block
+            save_tx_position(pending_merkleblock, block)
+            pendings.delete(pending_merkleblock)
+          end
+        end
+
         watchings.select do |item|
           case item
           when Bitcoin::Grpc::WatchTxConfirmedRequest
