@@ -9,10 +9,13 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
     FileUtils.rm_r('tmp/wallet_db/')
   end
 
-  describe 'get_tx_position' do
-    subject { db.get_tx_position(tx.tx_hash) }
+  describe 'get_tx' do
+    subject { db.get_tx(tx.tx_hash) }
 
-    before { db.save_tx(tx, 100, 2) }
+    before do
+      db.save_tx(tx.tx_hash, tx_payload)
+      db.save_tx_position(tx.tx_hash, 100, 2)
+    end
 
     let(:tx_payload) do
       '0200000001a4c651f8a8a90e54988dad4a1be2e9e0aa35abf407e5c2d301b072' \
@@ -25,7 +28,7 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
     let(:tx) { Bitcoin::Tx.parse_from_payload(tx_payload.htb) }
     let(:block_height) { 100 }
 
-    it { expect(subject).to eq [ 100, 2 ] }
+    it { expect(subject).to eq [ 100, 2, tx_payload] }
   end
 
   describe 'save_utxo' do
