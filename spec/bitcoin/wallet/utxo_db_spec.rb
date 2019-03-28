@@ -9,6 +9,7 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
     FileUtils.rm_r('tmp/wallet_db/')
   end
 
+<<<<<<< HEAD
   describe 'get_tx' do
     subject { db.get_tx(tx.tx_hash) }
 
@@ -31,6 +32,8 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
     it { expect(subject).to eq [ 100, 2, tx_payload] }
   end
 
+=======
+>>>>>>> Add gRPC message 'WatchUtxoSpent'
   describe 'save_utxo' do
     subject { db.save_utxo(out_point, 3, script_pubkey, 1) }
 
