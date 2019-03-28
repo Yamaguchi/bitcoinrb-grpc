@@ -22,6 +22,10 @@ module Bitcoin
         when Bitcoin::Grpc::WatchTxConfirmedRequest
           spv.filter_add(message.tx_hash)
           watchings << message
+        when Bitcoin::Grpc::WatchUtxoSpentRequest
+          outpoint = Bitcoin::OutPoint.new(message.tx_hash, message.output_index)
+          spv.filter_add(outpoint.to_payload.bth)
+          watchings << message
         when :watchings
           watchings
         end
@@ -43,7 +47,18 @@ module Bitcoin
 
         tx.inputs.each do |input|
           utxo = utxo_db.delete_utxo(input.out_point)
-          publisher << Bitcoin::Grpc::EventUtxoSpent.new(request_id: 0, tx_hash: tx.tx_hash, tx_payload: tx.to_payload.bth, utxo: utxo) if utxo
+          watchings
+            .select { |item| item.is_a? Bitcoin::Grpc::WatchUtxoSpentRequest }
+            .select { |item| input.out_point.hash == item.tx_hash && input.out_point.index == item.output_index }
+            .each do |item|
+              publisher << Bitcoin::Grpc::EventUtxoSpent.new(
+                request_id: item.id,
+                tx_hash: tx.tx_hash,
+                tx_payload: tx.to_payload.bth,
+                out_point: Bitcoin::Grpc::OutPoint.new(tx_hash: item.tx_hash, index: item.output_index),
+                utxo: utxo
+              )
+            end
         end
 
         utxo_db.save_tx(tx.tx_hash, tx.to_payload.bth)

@@ -57,6 +57,18 @@ module Bitcoin
         logger.info("watch_utxo: #{e.backtrace}")
       end
 
+      def watch_utxo_spent(request, call)
+        logger.info("watch_utxo_spent: #{request}")
+        utxo_handler << request
+        response = []
+        Receiver.spawn(:receiver, request, response, publisher, [Bitcoin::Grpc::EventUtxoSpent])
+        logger.info("watch_utxo_spent: end")
+        ResponseEnum.new(request, response, WatchUtxoSpentResponseBuilder).each
+      rescue => e
+        logger.info("watch_utxo_spent: #{e.message}")
+        logger.info("watch_utxo_spent: #{e.backtrace}")
+      end
+
       def watch_token(request, call)
         logger.info("watch_token: #{request}")
         utxo_handler << request
@@ -86,6 +98,15 @@ module Bitcoin
           Bitcoin::Grpc::WatchUtxoResponse.new(id: id, registered: event)
         when Bitcoin::Grpc::EventUtxoSpent
           Bitcoin::Grpc::WatchUtxoResponse.new(id: id, spent: event)
+        end
+      end
+    end
+
+    class WatchUtxoSpentResponseBuilder
+      def self.build(id, event)
+        case event
+        when Bitcoin::Grpc::EventUtxoSpent
+          Bitcoin::Grpc::WatchUtxoSpentResponse.new(id: id, spent: event)
         end
       end
     end

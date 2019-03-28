@@ -145,7 +145,7 @@ RSpec.describe Bitcoin::Wallet::UtxoDB do
     let(:asset_type) { Bitcoin::Wallet::AssetFeature::AssetType::OPEN_ASSETS }
     let(:asset_id) { 'ALn3aK1fSuG27N96UGYB1kUYUpGKRhBuBC' }
     let(:asset_quantity) { 1 }
-    let(:utxo) { Bitcoin::Grpc::Utxo.new(tx_hash: 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff', index: 1, block_height: block_height, value: 4, script_pubkey: script_pubkey) }
+    let(:utxo) { Bitcoin::Grpc::Utxo.new(tx_hash: 'ff' * 32, index: 1, block_height: block_height, value: 4, script_pubkey: script_pubkey) }
     let(:block_height) { 1000 }
     let(:script_pubkey) { Bitcoin::Script.to_p2wpkh('0a3355ef2085b1eb937c9e7729a0edde2d1e129e').to_payload.bth }
 

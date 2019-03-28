@@ -3,7 +3,6 @@ RSpec.describe Bitcoin::Wallet::AssetHandler do
     subject do
       asset_handler << message
       asset_handler.ask(:await).wait
-
     end
 
     let(:asset_handler) { described_class.spawn(:asset, spv, publisher) }
@@ -33,7 +32,8 @@ RSpec.describe Bitcoin::Wallet::AssetHandler do
     end
 
     context 'with Bitcoin::Grpc::EventUtxoSpent' do
-      let(:message) { Bitcoin::Grpc::EventUtxoSpent.new(tx_hash: tx.tx_hash, tx_payload: tx_payload, utxo: utxo) }
+      let(:message) { Bitcoin::Grpc::EventUtxoSpent.new(tx_hash: tx.tx_hash, tx_payload: tx_payload, out_point: out_point) }
+      let(:out_point) { Bitcoin::Grpc::OutPoint.new(tx_hash: 'ff' * 32,  index: index) }
 
       it do
         expect(db).to receive(:delete_token)

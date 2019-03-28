@@ -17,6 +17,7 @@ module Bitcoin
 
         rpc :WatchTxConfirmed, WatchTxConfirmedRequest, stream(WatchTxConfirmedResponse)
         rpc :WatchUtxo, WatchUtxoRequest, stream(WatchUtxoResponse)
+        rpc :WatchUtxoSpent, WatchUtxoSpentRequest, stream(WatchUtxoSpentResponse)
         rpc :WatchToken, WatchTokenRequest, stream(WatchTokenResponse)
         rpc :GetBlockchainInfo, GetBlockchainInfoRequest, GetBlockchainInfoResponse
       end

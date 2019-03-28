@@ -6,6 +6,7 @@ package bitcoin.grpc;
 service Blockchain {
   rpc WatchTxConfirmed(WatchTxConfirmedRequest) returns (stream WatchTxConfirmedResponse);
   rpc WatchUtxo(WatchUtxoRequest) returns (stream WatchUtxoResponse);
+  rpc WatchUtxoSpent(WatchUtxoSpentRequest) returns (stream WatchUtxoSpentResponse);
   rpc WatchToken(WatchTokenRequest) returns (stream WatchTokenResponse);
   rpc GetBlockchainInfo(GetBlockchainInfoRequest) returns (GetBlockchainInfoResponse);
 }
@@ -34,6 +35,18 @@ message WatchUtxoResponse {
     EventUtxoSpent spent = 3;
   }
 }
+
+message WatchUtxoSpentRequest {
+  uint32 id = 1;
+  string tx_hash = 2;
+  uint32 output_index = 3;
+}
+
+message WatchUtxoSpentResponse {
+  uint32 id = 1;
+  EventUtxoSpent spent = 2;
+}
+
 
 message WatchTokenRequest {
   uint32 id = 1;
@@ -86,6 +99,7 @@ message EventUtxoSpent {
   string tx_hash = 2;
   string tx_payload = 3;
   Utxo utxo = 4;
+  OutPoint out_point = 5;
 }
 
 message EventTokenIssued {
@@ -101,6 +115,11 @@ message EventTokenTransfered {
 message EventTokenBurned {
   uint32 request_id = 1;
   AssetOutput asset = 4;
+}
+
+message OutPoint {
+  string tx_hash = 1;
+  uint32 index = 2;
 }
 
 message Utxo {
