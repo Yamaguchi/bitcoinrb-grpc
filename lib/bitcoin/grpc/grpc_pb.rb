@@ -4,6 +4,60 @@
 require 'google/protobuf'
 
 Google::Protobuf::DescriptorPool.generated_pool.build do
+  add_message "bitcoin.grpc.EventsRequest" do
+    optional :operation, :enum, 1, "bitcoin.grpc.Operation"
+    optional :event_type, :string, 2
+  end
+  add_message "bitcoin.grpc.EventsResponse" do
+    oneof :event do
+      optional :connect, :message, 1, "bitcoin.grpc.Connect"
+      optional :disconnect, :message, 2, "bitcoin.grpc.Disconnect"
+      optional :block_created, :message, 3, "bitcoin.grpc.BlockCreated"
+      optional :reorganized, :message, 4, "bitcoin.grpc.Reorganized"
+      optional :tx_received, :message, 5, "bitcoin.grpc.TxReceived"
+      optional :tx_broadcasted, :message, 6, "bitcoin.grpc.TxBroadcasted"
+      optional :utxo_registered, :message, 7, "bitcoin.grpc.UtxoRegistered"
+      optional :utxo_spent, :message, 8, "bitcoin.grpc.UtxoSpent"
+    end
+  end
+  add_message "bitcoin.grpc.Connect" do
+    optional :host, :string, 1
+    optional :port, :uint32, 2
+    optional :local_version, :string, 3
+    optional :remote_version, :string, 4
+  end
+  add_message "bitcoin.grpc.Disconnect" do
+    optional :host, :string, 1
+    optional :port, :uint32, 2
+  end
+  add_message "bitcoin.grpc.BlockCreated" do
+    optional :hash, :string, 1
+    optional :height, :uint32, 2
+  end
+  add_message "bitcoin.grpc.Reorganized" do
+    optional :hash, :string, 1
+    optional :height, :uint32, 2
+    optional :orphan_block_hash, :string, 3
+  end
+  add_message "bitcoin.grpc.TxReceived" do
+    optional :tx_hash, :string, 1
+    optional :tx_payload, :string, 2
+  end
+  add_message "bitcoin.grpc.TxBroadcasted" do
+    optional :tx_hash, :string, 1
+    optional :tx_payload, :string, 2
+  end
+  add_message "bitcoin.grpc.UtxoRegistered" do
+    optional :tx_hash, :string, 1
+    optional :tx_payload, :string, 2
+    optional :utxo, :message, 3, "bitcoin.grpc.Utxo"
+  end
+  add_message "bitcoin.grpc.UtxoSpent" do
+    optional :tx_hash, :string, 1
+    optional :tx_payload, :string, 2
+    optional :utxo, :message, 3, "bitcoin.grpc.Utxo"
+    optional :out_point, :message, 4, "bitcoin.grpc.OutPoint"
+  end
   add_message "bitcoin.grpc.WatchTxConfirmedRequest" do
     optional :id, :uint32, 1
     optional :tx_hash, :string, 2
@@ -111,10 +165,24 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :index, :uint32, 5
     optional :block_height, :uint32, 6
   end
+  add_enum "bitcoin.grpc.Operation" do
+    value :SUBSCRIBE, 0
+    value :UNSUBSCRIBE, 1
+  end
 end
 
 module Bitcoin
   module Grpc
+    EventsRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventsRequest").msgclass
+    EventsResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventsResponse").msgclass
+    Connect = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.Connect").msgclass
+    Disconnect = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.Disconnect").msgclass
+    BlockCreated = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.BlockCreated").msgclass
+    Reorganized = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.Reorganized").msgclass
+    TxReceived = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.TxReceived").msgclass
+    TxBroadcasted = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.TxBroadcasted").msgclass
+    UtxoRegistered = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.UtxoRegistered").msgclass
+    UtxoSpent = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.UtxoSpent").msgclass
     WatchTxConfirmedRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.WatchTxConfirmedRequest").msgclass
     WatchTxConfirmedResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.WatchTxConfirmedResponse").msgclass
     WatchUtxoRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.WatchUtxoRequest").msgclass
@@ -135,5 +203,6 @@ module Bitcoin
     OutPoint = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.OutPoint").msgclass
     Utxo = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.Utxo").msgclass
     AssetOutput = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.AssetOutput").msgclass
+    Operation = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.Operation").enummodule
   end
 end

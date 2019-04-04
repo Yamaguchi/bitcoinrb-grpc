@@ -15,7 +15,10 @@ class BitcoinDaemon < DaemonSpawn::Base
 
     refresh_wallet
     node = Bitcoin::Node::SPV.new(conf)
-    Thread.new { Bitcoin::Grpc::Server.run(node) }
+    publisher = Bitcoin::Wallet::Publisher.spawn(:publisher)
+    utxo_handler = Bitcoin::Wallet::UtxoHandler.spawn(:utxo_handler, node, publisher)
+    asset_handler = Bitcoin::Wallet::AssetHandler.spawn(:asset_handler, node, publisher)
+    Thread.new { Bitcoin::Grpc::Server.run(node, publisher, utxo_handler, asset_handler) }
     node.run
   end
 

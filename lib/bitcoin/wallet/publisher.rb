@@ -21,7 +21,8 @@ module Bitcoin
             end
           elsif message[0] == :subscribe?
             receivers[message[1].name]&.include?(envelope.sender)
-          else
+          elsif message[0] == :unsubscribe
+            receivers.delete(message[1].name)
           end
         else
           receivers[message&.class&.name]&.each { |r| r << message }

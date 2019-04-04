@@ -5,6 +5,8 @@ require 'concurrent'
 require 'concurrent-edge'
 require 'leveldb'
 
+require 'extensions/string'
+
 module Bitcoin
   module Grpc
     class Error < StandardError; end

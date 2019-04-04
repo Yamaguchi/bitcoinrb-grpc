@@ -9,6 +9,76 @@ service Blockchain {
   rpc WatchUtxoSpent(WatchUtxoSpentRequest) returns (stream WatchUtxoSpentResponse);
   rpc WatchToken(WatchTokenRequest) returns (stream WatchTokenResponse);
   rpc GetBlockchainInfo(GetBlockchainInfoRequest) returns (GetBlockchainInfoResponse);
+  rpc Events(stream EventsRequest) returns (stream EventsResponse);
+}
+
+enum Operation {
+  SUBSCRIBE = 0;
+  UNSUBSCRIBE = 1;
+}
+
+message EventsRequest {
+  Operation operation = 1;
+  string event_type = 2;
+}
+
+message EventsResponse {
+  oneof event {
+    Connect connect = 1;
+    Disconnect disconnect = 2;
+    BlockCreated block_created = 3;
+    Reorganized reorganized = 4;
+    TxReceived tx_received = 5;
+    TxBroadcasted tx_broadcasted = 6;
+    UtxoRegistered utxo_registered = 7;
+    UtxoSpent utxo_spent = 8;
+  }
+}
+
+message Connect {
+  string host = 1;
+  uint32 port = 2;
+  string local_version = 3;
+  string remote_version = 4;
+}
+
+message Disconnect {
+  string host = 1;
+  uint32 port = 2;
+}
+
+message BlockCreated {
+  string hash = 1;
+  uint32 height = 2;
+}
+
+message Reorganized {
+  string hash = 1;
+  uint32 height = 2;
+  string orphan_block_hash = 3;
+}
+
+message TxReceived {
+  string tx_hash = 1;
+  string tx_payload = 2;
+}
+
+message TxBroadcasted {
+  string tx_hash = 1;
+  string tx_payload = 2;
+}
+
+message UtxoRegistered {
+  string tx_hash = 1;
+  string tx_payload = 2;
+  Utxo utxo = 3;
+}
+
+message UtxoSpent {
+  string tx_hash = 1;
+  string tx_payload = 2;
+  Utxo utxo = 3;
+  OutPoint out_point = 4;
 }
 
 message WatchTxConfirmedRequest {

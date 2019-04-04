@@ -1,21 +1,21 @@
 module Bitcoin
   module Grpc
     class Server < Bitcoin::Grpc::Blockchain::Service
-      def self.run(spv)
+      def self.run(spv, publisher, utxo_handler, asset_handler)
         addr = "0.0.0.0:8080"
         s = GRPC::RpcServer.new
         s.add_http2_port(addr, :this_port_is_insecure)
-        s.handle(new(spv))
+        s.handle(new(spv, publisher, utxo_handler, asset_handler))
         s.run_till_terminated
       end
 
       attr_reader :spv, :utxo_handler, :asset_handler, :publisher, :logger
 
-      def initialize(spv)
+      def initialize(spv, publisher, utxo_handler, asset_handler)
         @spv = spv
-        @publisher = Bitcoin::Wallet::Publisher.spawn(:publisher)
-        @utxo_handler = Bitcoin::Wallet::UtxoHandler.spawn(:utxo_handler, spv, publisher)
-        @asset_handler = Bitcoin::Wallet::AssetHandler.spawn(:asset_handler, spv, publisher)
+        @publisher = publisher
+        @utxo_handler = utxo_handler
+        @asset_handler = asset_handler
         @logger = Bitcoin::Logger.create(:debug)
       end
 
@@ -79,6 +79,73 @@ module Bitcoin
       rescue => e
         logger.info("watch_token: #{e.message}")
         logger.info("watch_token: #{e.backtrace}")
+      end
+
+      def events(requests)
+        logger.info("events: #{requests}")
+        events = []
+
+        receiver = EventsReceiver.spawn(:receiver, events, publisher)
+        requests.each do |request|
+          receiver << request
+        end
+
+        logger.info("events: end")
+        EventsResponseEnum.new(events).each
+      rescue => e
+        logger.error("events: #{e.message}")
+        logger.error("events: #{e.backtrace}")
+      end
+    end
+
+    class EventsReceiver < Concurrent::Actor::Context
+      attr_reader :events, :logger, :publisher
+
+      def initialize(events, publisher)
+        @events = events
+        @publisher = publisher
+        @logger = Bitcoin::Logger.create(:debug)
+      end
+
+      def on_message(message)
+        case message
+        when Bitcoin::Grpc::EventsRequest
+          clazz = Object.const_get("Bitcoin").const_get("Grpc").const_get(message.event_type)
+          case message.operation
+          when :SUBSCRIBE
+            publisher << [:subscribe, clazz]
+          when :UNSUBSCRIBE
+            publisher << [:unsubscribe, clazz]
+          else
+            logger.error("unsupported operation")
+          end
+        else
+          events << message
+        end
+      end
+    end
+
+    class EventsResponseEnum
+      attr_reader :events, :logger
+
+      def initialize(events)
+        @events = events
+        @logger = Bitcoin::Logger.create(:debug)
+      end
+
+      def each
+        return enum_for(:each) unless block_given?
+        loop do
+          event = events.shift
+          if event
+            response = Bitcoin::Grpc::EventsResponse.new
+            field = event.class.name.split('::').last.snake
+            response[field] = event
+            yield response
+          else
+            sleep(1)
+          end
+        end
       end
     end
 
