@@ -92,6 +92,10 @@ module Bitcoin
 
       def header(data)
         block_height = data[:height]
+        block_hash = data[:hash]
+
+        publisher << Bitcoin::Grpc::BlockCreated.new(hash: block_hash, height: block_height)
+
         pendings.each do |pending_merkleblock|
           tx_blockhash = pending_merkleblock.header.block_hash
           block = spv.chain.find_entry_by_hash(tx_blockhash)
