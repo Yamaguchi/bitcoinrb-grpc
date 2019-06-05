@@ -94,7 +94,9 @@ module Bitcoin
         block_height = data[:height]
         block_hash = data[:hash]
 
-        publisher << Bitcoin::Grpc::BlockCreated.new(hash: block_hash, height: block_height)
+        if block_hash && block_height > 0
+          publisher << Bitcoin::Grpc::BlockCreated.new(hash: block_hash, height: block_height)
+        end
 
         pendings.each do |pending_merkleblock|
           tx_blockhash = pending_merkleblock.header.block_hash
