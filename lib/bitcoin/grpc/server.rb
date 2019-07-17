@@ -71,7 +71,7 @@ module Bitcoin
 
       def watch_token(request, call)
         logger.info("watch_token: #{request}")
-        utxo_handler << request
+        asset_handler << request
         response = []
         Receiver.spawn(:receiver, request, response, publisher, [Bitcoin::Grpc::EventTokenIssued, Bitcoin::Grpc::EventTokenTransfered])
         logger.info("watch_token: end")
