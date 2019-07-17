@@ -90,7 +90,8 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "bitcoin.grpc.WatchTokenRequest" do
     optional :id, :uint32, 1
-    optional :asset_type, :bytes, 2
+    optional :asset_type, :uint32, 2
+    optional :asset_id, :string, 3
   end
   add_message "bitcoin.grpc.WatchTokenResponse" do
     optional :id, :uint32, 1
@@ -158,7 +159,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :script_pubkey, :string, 5
   end
   add_message "bitcoin.grpc.AssetOutput" do
-    optional :asset_type, :bytes, 1
+    optional :asset_type, :uint32, 1
     optional :asset_id, :string, 2
     optional :asset_quantity, :uint64, 3
     optional :tx_hash, :string, 4

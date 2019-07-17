@@ -15,7 +15,7 @@ module Bitcoin
         logger.info("UtxoDB#save_token:#{[asset_type, asset_id, asset_quantity, utxo.inspect]}")
         level_db.batch do
           asset_output = Bitcoin::Grpc::AssetOutput.new(
-            asset_type: [asset_type].pack('C'),
+            asset_type: asset_type,
             asset_id: asset_id,
             asset_quantity: asset_quantity,
             tx_hash: utxo.tx_hash,
@@ -28,6 +28,7 @@ module Bitcoin
           # out_point
           key = KEY_PREFIX[:asset_out_point] + out_point.to_payload.bth
           return if level_db.contains?(key)
+
           level_db.put(key, payload)
 
           # script_pubkey
@@ -54,11 +55,11 @@ module Bitcoin
           level_db.delete(key)
 
           if utxo.script_pubkey
-            key = KEY_PREFIX[:asset_script_pubkey] + asset_output.asset_type.bth + utxo.script_pubkey + out_point.to_payload.bth
+            key = KEY_PREFIX[:asset_script_pubkey] + [asset_output.asset_type].pack('C').bth + utxo.script_pubkey + out_point.to_payload.bth
             level_db.delete(key)
           end
 
-          key = KEY_PREFIX[:asset_height] + asset_output.asset_type.bth + [utxo.block_height].pack('N').bth + out_point.to_payload.bth
+          key = KEY_PREFIX[:asset_height] + [asset_output.asset_type].pack('C').bth + [utxo.block_height].pack('N').bth + out_point.to_payload.bth
           level_db.delete(key)
           return asset_output
         end

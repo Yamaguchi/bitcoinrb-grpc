@@ -19,6 +19,7 @@ RSpec.describe Bitcoin::Grpc::Server do
 
     it do
       responses = subject
+      publisher.ask(:await).wait
       connect = Bitcoin::Grpc::Connect.new(host: "localhost", port: 8333)
       publisher << connect
       response_event = responses.each do |response|

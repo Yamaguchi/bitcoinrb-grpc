@@ -120,7 +120,8 @@ message WatchUtxoSpentResponse {
 
 message WatchTokenRequest {
   uint32 id = 1;
-  bytes asset_type = 2;
+  uint32 asset_type = 2;
+  string asset_id = 3;
 }
 
 message WatchTokenResponse {
@@ -201,7 +202,7 @@ message Utxo {
 }
 
 message AssetOutput {
-  bytes asset_type = 1;
+  uint32 asset_type = 1;
   string asset_id = 2;
   uint64 asset_quantity = 3;
   string tx_hash = 4;
