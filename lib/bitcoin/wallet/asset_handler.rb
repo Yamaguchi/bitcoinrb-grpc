@@ -29,7 +29,6 @@ module Bitcoin
           when tx.open_assets?
             outputs = Bitcoin::Grpc::OapService.outputs_with_open_asset_id(message.tx_hash)
             begin
-              puts outputs
               if outputs
                 outputs.each do |output|
                   asset_id = output['asset_id']
@@ -47,7 +46,7 @@ module Bitcoin
                   next unless asset_output
 
                   item_to_delete = []
-                  watchings.select { |item| item.asset_id == asset_id }.each do |item|
+                  watchings.select { |item| item.asset_id == asset_id && tx.tx_hash == item.tx_hash }.each do |item|
                     if oa_output_type == 'issuance'
                       publisher << Bitcoin::Grpc::EventTokenIssued.new(request_id: item.id, asset: asset_output)
                     else

@@ -122,6 +122,7 @@ message WatchTokenRequest {
   uint32 id = 1;
   uint32 asset_type = 2;
   string asset_id = 3;
+  string tx_hash = 4;
 }
 
 message WatchTokenResponse {
