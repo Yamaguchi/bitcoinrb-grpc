@@ -23,6 +23,7 @@ module Bitcoin
         rpc :Events, stream(EventsRequest), stream(EventsResponse)
         rpc :ListUnspent, ListUnspentRequest, ListUnspentResponse
         rpc :ListColoredUnspent, ListColoredUnspentRequest, ListColoredUnspentResponse
+        rpc :ListUncoloredUnspent, ListUncoloredUnspentRequest, ListUncoloredUnspentResponse
       end
 
       Stub = Service.rpc_stub_class

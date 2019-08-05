@@ -12,6 +12,7 @@ service Blockchain {
   rpc Events(stream EventsRequest) returns (stream EventsResponse);
   rpc ListUnspent(ListUnspentRequest) returns (ListUnspentResponse);
   rpc ListColoredUnspent(ListColoredUnspentRequest) returns (ListColoredUnspentResponse);
+  rpc ListUncoloredUnspent(ListUncoloredUnspentRequest) returns (ListUncoloredUnspentResponse);
 }
 
 enum Operation {
@@ -173,6 +174,16 @@ message ListColoredUnspentRequest {
 
 message ListColoredUnspentResponse {
   repeated AssetOutput assets = 1;
+}
+
+message ListUncoloredUnspentRequest {
+  string account_name = 1;
+  uint32 min = 2;
+  uint32 max = 3;
+}
+
+message ListUncoloredUnspentResponse {
+  repeated Utxo utxos = 1;
 }
 
 message EventTxConfirmed {

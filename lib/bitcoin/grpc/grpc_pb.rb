@@ -135,6 +135,14 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     add_message "bitcoin.grpc.ListColoredUnspentResponse" do
       repeated :assets, :message, 1, "bitcoin.grpc.AssetOutput"
     end
+    add_message "bitcoin.grpc.ListUncoloredUnspentRequest" do
+      optional :account_name, :string, 1
+      optional :min, :uint32, 2
+      optional :max, :uint32, 3
+    end
+    add_message "bitcoin.grpc.ListUncoloredUnspentResponse" do
+      repeated :utxos, :message, 1, "bitcoin.grpc.Utxo"
+    end
     add_message "bitcoin.grpc.EventTxConfirmed" do
       optional :request_id, :uint32, 1
       optional :tx_hash, :string, 2
@@ -223,6 +231,8 @@ module Bitcoin
     ListUnspentResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.ListUnspentResponse").msgclass
     ListColoredUnspentRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.ListColoredUnspentRequest").msgclass
     ListColoredUnspentResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.ListColoredUnspentResponse").msgclass
+    ListUncoloredUnspentRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.ListUncoloredUnspentRequest").msgclass
+    ListUncoloredUnspentResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.ListUncoloredUnspentResponse").msgclass
     EventTxConfirmed = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventTxConfirmed").msgclass
     EventUtxoRegistered = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventUtxoRegistered").msgclass
     EventUtxoSpent = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventUtxoSpent").msgclass

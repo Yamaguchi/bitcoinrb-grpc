@@ -112,6 +112,14 @@ module Bitcoin
         logger.error("list_colored_unspent: #{e.message}")
         logger.error("list_colored_unspent: #{e.backtrace}")
       end
+
+      def list_uncolored_unspent(request, _call)
+        logger.info("list_uncolored_unspent: #{request}")
+        Bitcoin::Grpc::Api::ListUncoloredUnspent.new(spv).execute(request)
+      rescue => e
+        logger.error("list_uncolored_unspent: #{e.message}")
+        logger.error("list_uncolored_unspent: #{e.backtrace}")
+      end
     end
 
     class EventsReceiver < Concurrent::Actor::Context
