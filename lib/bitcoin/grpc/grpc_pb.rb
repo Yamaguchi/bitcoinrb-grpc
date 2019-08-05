@@ -125,6 +125,16 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     add_message "bitcoin.grpc.ListUnspentResponse" do
       repeated :utxos, :message, 1, "bitcoin.grpc.Utxo"
     end
+    add_message "bitcoin.grpc.ListColoredUnspentRequest" do
+      optional :account_name, :string, 1
+      optional :min, :uint32, 2
+      optional :max, :uint32, 3
+      optional :asset_type, :uint32, 4
+      optional :asset_id, :string, 5
+    end
+    add_message "bitcoin.grpc.ListColoredUnspentResponse" do
+      repeated :assets, :message, 1, "bitcoin.grpc.AssetOutput"
+    end
     add_message "bitcoin.grpc.EventTxConfirmed" do
       optional :request_id, :uint32, 1
       optional :tx_hash, :string, 2
@@ -176,6 +186,8 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
       optional :tx_hash, :string, 4
       optional :index, :uint32, 5
       optional :block_height, :uint32, 6
+      optional :value, :uint64, 7
+      optional :script_pubkey, :string, 8
     end
     add_enum "bitcoin.grpc.Operation" do
       value :SUBSCRIBE, 0
@@ -209,6 +221,8 @@ module Bitcoin
     GetBlockchainInfoResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.GetBlockchainInfoResponse").msgclass
     ListUnspentRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.ListUnspentRequest").msgclass
     ListUnspentResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.ListUnspentResponse").msgclass
+    ListColoredUnspentRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.ListColoredUnspentRequest").msgclass
+    ListColoredUnspentResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.ListColoredUnspentResponse").msgclass
     EventTxConfirmed = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventTxConfirmed").msgclass
     EventUtxoRegistered = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventUtxoRegistered").msgclass
     EventUtxoSpent = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventUtxoSpent").msgclass

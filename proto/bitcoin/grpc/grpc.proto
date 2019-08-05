@@ -11,6 +11,7 @@ service Blockchain {
   rpc GetBlockchainInfo(GetBlockchainInfoRequest) returns (GetBlockchainInfoResponse);
   rpc Events(stream EventsRequest) returns (stream EventsResponse);
   rpc ListUnspent(ListUnspentRequest) returns (ListUnspentResponse);
+  rpc ListColoredUnspent(ListColoredUnspentRequest) returns (ListColoredUnspentResponse);
 }
 
 enum Operation {
@@ -162,6 +163,18 @@ message ListUnspentResponse {
   repeated Utxo utxos = 1;
 }
 
+message ListColoredUnspentRequest {
+  string account_name = 1;
+  uint32 min = 2;
+  uint32 max = 3;
+  uint32 asset_type = 4;
+  string asset_id = 5;
+}
+
+message ListColoredUnspentResponse {
+  repeated AssetOutput assets = 1;
+}
+
 message EventTxConfirmed {
   uint32 request_id = 1;
   string tx_hash = 2;
@@ -221,4 +234,6 @@ message AssetOutput {
   string tx_hash = 4;
   uint32 index = 5;
   uint32 block_height = 6;
+  uint64 value = 7;
+  string script_pubkey = 8;
 }

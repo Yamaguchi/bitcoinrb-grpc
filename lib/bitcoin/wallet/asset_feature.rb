@@ -20,7 +20,9 @@ module Bitcoin
             asset_quantity: asset_quantity,
             tx_hash: utxo.tx_hash,
             index: utxo.index,
-            block_height: utxo.block_height
+            block_height: utxo.block_height,
+            value: utxo.value,
+            script_pubkey: utxo.script_pubkey
           )
           out_point = Bitcoin::OutPoint.new(utxo.tx_hash, utxo.index)
           payload = asset_output.to_proto.bth
