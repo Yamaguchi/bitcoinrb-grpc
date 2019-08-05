@@ -24,6 +24,7 @@ module Bitcoin
         rpc :ListUnspent, ListUnspentRequest, ListUnspentResponse
         rpc :ListColoredUnspent, ListColoredUnspentRequest, ListColoredUnspentResponse
         rpc :ListUncoloredUnspent, ListUncoloredUnspentRequest, ListUncoloredUnspentResponse
+        rpc :GetBalance, GetBalanceRequest, GetBalanceResponse
       end
 
       Stub = Service.rpc_stub_class
