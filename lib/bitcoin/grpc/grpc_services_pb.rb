@@ -21,6 +21,7 @@ module Bitcoin
         rpc :WatchToken, WatchTokenRequest, stream(WatchTokenResponse)
         rpc :GetBlockchainInfo, GetBlockchainInfoRequest, GetBlockchainInfoResponse
         rpc :Events, stream(EventsRequest), stream(EventsResponse)
+        rpc :ListUnspent, ListUnspentRequest, ListUnspentResponse
       end
 
       Stub = Service.rpc_stub_class

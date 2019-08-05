@@ -19,6 +19,7 @@ module Bitcoin
     require 'extensions/bitcoin/wallet/db'
     require 'extensions/bitcoin/tx'
 
+    autoload :Api, 'bitcoin/grpc/api'
     autoload :OapService, 'bitcoin/grpc/oap_service'
     autoload :Server, 'bitcoin/grpc/server'
   end

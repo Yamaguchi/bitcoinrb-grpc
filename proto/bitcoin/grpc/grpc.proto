@@ -10,6 +10,7 @@ service Blockchain {
   rpc WatchToken(WatchTokenRequest) returns (stream WatchTokenResponse);
   rpc GetBlockchainInfo(GetBlockchainInfoRequest) returns (GetBlockchainInfoResponse);
   rpc Events(stream EventsRequest) returns (stream EventsResponse);
+  rpc ListUnspent(ListUnspentRequest) returns (ListUnspentResponse);
 }
 
 enum Operation {
@@ -148,6 +149,17 @@ message GetBlockchainInfoResponse {
   string bestblockhash = 3;
   uint32 chainwork = 4;
   uint32 mediantime = 5;
+}
+
+message ListUnspentRequest {
+  string account_name = 1;
+  uint32 min = 2;
+  uint32 max = 3;
+  repeated string addresses = 4;
+}
+
+message ListUnspentResponse {
+  repeated Utxo utxos = 1;
 }
 
 message EventTxConfirmed {
