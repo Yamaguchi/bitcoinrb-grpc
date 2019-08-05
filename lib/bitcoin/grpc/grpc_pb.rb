@@ -149,6 +149,15 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     add_message "bitcoin.grpc.GetBalanceResponse" do
       optional :balance, :uint64, 1
     end
+    add_message "bitcoin.grpc.GetTokenBalanceRequest" do
+      optional :account_name, :string, 1
+      optional :asset_type, :uint32, 4
+      optional :asset_id, :string, 5
+    end
+    add_message "bitcoin.grpc.GetTokenBalanceResponse" do
+      optional :token_balance, :uint64, 1
+      optional :balance, :uint64, 2
+    end
     add_message "bitcoin.grpc.EventTxConfirmed" do
       optional :request_id, :uint32, 1
       optional :tx_hash, :string, 2
@@ -241,6 +250,8 @@ module Bitcoin
     ListUncoloredUnspentResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.ListUncoloredUnspentResponse").msgclass
     GetBalanceRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.GetBalanceRequest").msgclass
     GetBalanceResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.GetBalanceResponse").msgclass
+    GetTokenBalanceRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.GetTokenBalanceRequest").msgclass
+    GetTokenBalanceResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.GetTokenBalanceResponse").msgclass
     EventTxConfirmed = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventTxConfirmed").msgclass
     EventUtxoRegistered = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventUtxoRegistered").msgclass
     EventUtxoSpent = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventUtxoSpent").msgclass
