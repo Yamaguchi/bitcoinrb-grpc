@@ -128,6 +128,14 @@ module Bitcoin
         logger.error("get_balance: #{e.message}")
         logger.error("get_balance: #{e.backtrace}")
       end
+
+      def get_new_address(request, _call)
+        logger.info("get_new_address: #{request}")
+        Bitcoin::Grpc::Api::GetNewAddress.new(spv).execute(request)
+      rescue => e
+        logger.error("get_new_address: #{e.message}")
+        logger.error("get_new_address: #{e.backtrace}")
+      end
     end
 
     class EventsReceiver < Concurrent::Actor::Context

@@ -158,6 +158,13 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
       optional :token_balance, :uint64, 1
       optional :balance, :uint64, 2
     end
+    add_message "bitcoin.grpc.GetNewAddressRequest" do
+      optional :account_name, :string, 1
+    end
+    add_message "bitcoin.grpc.GetNewAddressResponse" do
+      optional :address, :string, 1
+      optional :script_pubkey, :string, 2
+    end
     add_message "bitcoin.grpc.EventTxConfirmed" do
       optional :request_id, :uint32, 1
       optional :tx_hash, :string, 2
@@ -252,6 +259,8 @@ module Bitcoin
     GetBalanceResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.GetBalanceResponse").msgclass
     GetTokenBalanceRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.GetTokenBalanceRequest").msgclass
     GetTokenBalanceResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.GetTokenBalanceResponse").msgclass
+    GetNewAddressRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.GetNewAddressRequest").msgclass
+    GetNewAddressResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.GetNewAddressResponse").msgclass
     EventTxConfirmed = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventTxConfirmed").msgclass
     EventUtxoRegistered = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventUtxoRegistered").msgclass
     EventUtxoSpent = Google::Protobuf::DescriptorPool.generated_pool.lookup("bitcoin.grpc.EventUtxoSpent").msgclass

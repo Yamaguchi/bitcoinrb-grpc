@@ -15,6 +15,7 @@ service Blockchain {
   rpc ListUncoloredUnspent(ListUncoloredUnspentRequest) returns (ListUncoloredUnspentResponse);
   rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
   rpc GetTokenBalance(GetTokenBalanceRequest) returns (GetTokenBalanceResponse);
+  rpc GetNewAddress(GetNewAddressRequest) returns (GetNewAddressRequest);
 }
 
 enum Operation {
@@ -205,6 +206,15 @@ message GetTokenBalanceRequest {
 message GetTokenBalanceResponse {
   uint64 token_balance = 1;
   uint64 balance = 2;
+}
+
+message GetNewAddressRequest {
+  string account_name = 1;
+}
+
+message GetNewAddressResponse {
+  string address = 1;
+  string script_pubkey = 2;
 }
 
 message EventTxConfirmed {

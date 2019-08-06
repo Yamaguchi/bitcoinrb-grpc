@@ -7,6 +7,7 @@ module Bitcoin
       autoload :ListUncoloredUnspent, 'bitcoin/grpc/api/list_uncolored_unspent'
       autoload :GetBalance, 'bitcoin/grpc/api/get_balance'
       autoload :GetTokenBalance, 'bitcoin/grpc/api/get_token_balance'
+      autoload :GetNewAddress, 'bitcoin/grpc/api/get_new_address'
     end
   end
 end
